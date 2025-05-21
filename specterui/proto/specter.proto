@@ -3,7 +3,7 @@ syntax = "proto3";
 import "google/protobuf/empty.proto";
 import "google/protobuf/struct.proto";
 
-package specter;
+package specter_proto;
 
 // --------------------------------- Marker --------------------------------- //
 
@@ -36,6 +36,8 @@ service ObjectService {
 
     rpc GetMethods (Object) returns (Methods) {}
     rpc GetProperties (Object) returns (Properties) {}
+
+    rpc ListenObjectChanges (google.protobuf.Empty) returns (stream ObjectChange) {}
 }
 
 message OptionalObject {
@@ -82,4 +84,32 @@ message Properties {
 message PropertyValue {
     string property = 1;
     google.protobuf.Value value = 2;
+}
+
+message ObjectChange {
+    oneof change_type {
+        ObjectAdded added = 1;
+        ObjectRemoved removed = 2;
+        ObjectReparented reparented = 3;
+        ObjectRenamed renamed = 4;
+    }
+}
+
+message ObjectAdded {
+    Object object = 1;
+    Object parent = 2;
+}
+
+message ObjectRemoved {
+    Object object = 1;
+}
+
+message ObjectReparented {
+    Object object = 1;
+    Object parent = 2;
+}
+
+message ObjectRenamed {
+    Object old_object = 1;
+    Object new_object = 2;
 }

@@ -26,39 +26,49 @@ from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 from google.protobuf import struct_pb2 as google_dot_protobuf_dot_struct__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1dspecterui/proto/specter.proto\x12\x07specter\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1cgoogle/protobuf/struct.proto\"\"\n\x0fRecorderCommand\x12\x0f\n\x07\x63ommand\x18\x01 \x01(\t\".\n\x0eOptionalObject\x12\x12\n\x05query\x18\x01 \x01(\tH\x00\x88\x01\x01\x42\x08\n\x06_query\"\x17\n\x06Object\x12\r\n\x05query\x18\x01 \x01(\t\"+\n\x07Objects\x12 \n\x07objects\x18\x01 \x03(\x0b\x32\x0f.specter.Object\"0\n\nObjectTree\x12\"\n\x05nodes\x18\x01 \x03(\x0b\x32\x13.specter.ObjectNode\"Q\n\nObjectNode\x12\x1f\n\x06object\x18\x01 \x01(\x0b\x32\x0f.specter.Object\x12\"\n\x05nodes\x18\x02 \x03(\x0b\x32\x13.specter.ObjectNode\"h\n\nMethodCall\x12\x1f\n\x06object\x18\x01 \x01(\x0b\x32\x0f.specter.Object\x12\x0e\n\x06method\x18\x02 \x01(\t\x12)\n\targuments\x18\x03 \x03(\x0b\x32\x16.google.protobuf.Value\"j\n\x0ePropertyUpdate\x12\x1f\n\x06object\x18\x01 \x01(\x0b\x32\x0f.specter.Object\x12\x10\n\x08property\x18\x02 \x01(\t\x12%\n\x05value\x18\x03 \x01(\x0b\x32\x16.google.protobuf.Value\"\x1a\n\x07Methods\x12\x0f\n\x07methods\x18\x01 \x03(\t\"8\n\nProperties\x12*\n\nproperties\x18\x01 \x03(\x0b\x32\x16.specter.PropertyValue\"H\n\rPropertyValue\x12\x10\n\x08property\x18\x01 \x01(\t\x12%\n\x05value\x18\x02 \x01(\x0b\x32\x16.google.protobuf.Value2\x84\x01\n\rMarkerService\x12\x39\n\x05Start\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.Empty\"\x00\x12\x38\n\x04Stop\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.Empty\"\x00\x32Y\n\x0fRecorderService\x12\x46\n\x0eListenCommands\x12\x16.google.protobuf.Empty\x1a\x18.specter.RecorderCommand\"\x00\x30\x01\x32\xca\x03\n\rObjectService\x12\x39\n\x07GetTree\x12\x17.specter.OptionalObject\x1a\x13.specter.ObjectTree\"\x00\x12+\n\x04\x46ind\x12\x0f.specter.Object\x1a\x10.specter.Objects\"\x00\x12/\n\tGetParent\x12\x0f.specter.Object\x1a\x0f.specter.Object\"\x00\x12\x32\n\x0bGetChildren\x12\x0f.specter.Object\x1a\x10.specter.Objects\"\x00\x12;\n\nCallMethod\x12\x13.specter.MethodCall\x1a\x16.google.protobuf.Empty\"\x00\x12\x43\n\x0eUpdateProperty\x12\x17.specter.PropertyUpdate\x1a\x16.google.protobuf.Empty\"\x00\x12\x31\n\nGetMethods\x12\x0f.specter.Object\x1a\x10.specter.Methods\"\x00\x12\x37\n\rGetProperties\x12\x0f.specter.Object\x1a\x13.specter.Properties\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1dspecterui/proto/specter.proto\x12\rspecter_proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1cgoogle/protobuf/struct.proto\"\"\n\x0fRecorderCommand\x12\x0f\n\x07\x63ommand\x18\x01 \x01(\t\".\n\x0eOptionalObject\x12\x12\n\x05query\x18\x01 \x01(\tH\x00\x88\x01\x01\x42\x08\n\x06_query\"\x17\n\x06Object\x12\r\n\x05query\x18\x01 \x01(\t\"1\n\x07Objects\x12&\n\x07objects\x18\x01 \x03(\x0b\x32\x15.specter_proto.Object\"6\n\nObjectTree\x12(\n\x05nodes\x18\x01 \x03(\x0b\x32\x19.specter_proto.ObjectNode\"]\n\nObjectNode\x12%\n\x06object\x18\x01 \x01(\x0b\x32\x15.specter_proto.Object\x12(\n\x05nodes\x18\x02 \x03(\x0b\x32\x19.specter_proto.ObjectNode\"n\n\nMethodCall\x12%\n\x06object\x18\x01 \x01(\x0b\x32\x15.specter_proto.Object\x12\x0e\n\x06method\x18\x02 \x01(\t\x12)\n\targuments\x18\x03 \x03(\x0b\x32\x16.google.protobuf.Value\"p\n\x0ePropertyUpdate\x12%\n\x06object\x18\x01 \x01(\x0b\x32\x15.specter_proto.Object\x12\x10\n\x08property\x18\x02 \x01(\t\x12%\n\x05value\x18\x03 \x01(\x0b\x32\x16.google.protobuf.Value\"\x1a\n\x07Methods\x12\x0f\n\x07methods\x18\x01 \x03(\t\">\n\nProperties\x12\x30\n\nproperties\x18\x01 \x03(\x0b\x32\x1c.specter_proto.PropertyValue\"H\n\rPropertyValue\x12\x10\n\x08property\x18\x01 \x01(\t\x12%\n\x05value\x18\x02 \x01(\x0b\x32\x16.google.protobuf.Value\"\xe3\x01\n\x0cObjectChange\x12+\n\x05\x61\x64\x64\x65\x64\x18\x01 \x01(\x0b\x32\x1a.specter_proto.ObjectAddedH\x00\x12/\n\x07removed\x18\x02 \x01(\x0b\x32\x1c.specter_proto.ObjectRemovedH\x00\x12\x35\n\nreparented\x18\x03 \x01(\x0b\x32\x1f.specter_proto.ObjectReparentedH\x00\x12/\n\x07renamed\x18\x04 \x01(\x0b\x32\x1c.specter_proto.ObjectRenamedH\x00\x42\r\n\x0b\x63hange_type\"[\n\x0bObjectAdded\x12%\n\x06object\x18\x01 \x01(\x0b\x32\x15.specter_proto.Object\x12%\n\x06parent\x18\x02 \x01(\x0b\x32\x15.specter_proto.Object\"6\n\rObjectRemoved\x12%\n\x06object\x18\x01 \x01(\x0b\x32\x15.specter_proto.Object\"`\n\x10ObjectReparented\x12%\n\x06object\x18\x01 \x01(\x0b\x32\x15.specter_proto.Object\x12%\n\x06parent\x18\x02 \x01(\x0b\x32\x15.specter_proto.Object\"e\n\rObjectRenamed\x12)\n\nold_object\x18\x01 \x01(\x0b\x32\x15.specter_proto.Object\x12)\n\nnew_object\x18\x02 \x01(\x0b\x32\x15.specter_proto.Object2\x84\x01\n\rMarkerService\x12\x39\n\x05Start\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.Empty\"\x00\x12\x38\n\x04Stop\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.Empty\"\x00\x32_\n\x0fRecorderService\x12L\n\x0eListenCommands\x12\x16.google.protobuf.Empty\x1a\x1e.specter_proto.RecorderCommand\"\x00\x30\x01\x32\xee\x04\n\rObjectService\x12\x45\n\x07GetTree\x12\x1d.specter_proto.OptionalObject\x1a\x19.specter_proto.ObjectTree\"\x00\x12\x37\n\x04\x46ind\x12\x15.specter_proto.Object\x1a\x16.specter_proto.Objects\"\x00\x12;\n\tGetParent\x12\x15.specter_proto.Object\x1a\x15.specter_proto.Object\"\x00\x12>\n\x0bGetChildren\x12\x15.specter_proto.Object\x1a\x16.specter_proto.Objects\"\x00\x12\x41\n\nCallMethod\x12\x19.specter_proto.MethodCall\x1a\x16.google.protobuf.Empty\"\x00\x12I\n\x0eUpdateProperty\x12\x1d.specter_proto.PropertyUpdate\x1a\x16.google.protobuf.Empty\"\x00\x12=\n\nGetMethods\x12\x15.specter_proto.Object\x1a\x16.specter_proto.Methods\"\x00\x12\x43\n\rGetProperties\x12\x15.specter_proto.Object\x1a\x19.specter_proto.Properties\"\x00\x12N\n\x13ListenObjectChanges\x12\x16.google.protobuf.Empty\x1a\x1b.specter_proto.ObjectChange\"\x00\x30\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'specterui.proto.specter_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_RECORDERCOMMAND']._serialized_start=101
-  _globals['_RECORDERCOMMAND']._serialized_end=135
-  _globals['_OPTIONALOBJECT']._serialized_start=137
-  _globals['_OPTIONALOBJECT']._serialized_end=183
-  _globals['_OBJECT']._serialized_start=185
-  _globals['_OBJECT']._serialized_end=208
-  _globals['_OBJECTS']._serialized_start=210
-  _globals['_OBJECTS']._serialized_end=253
-  _globals['_OBJECTTREE']._serialized_start=255
-  _globals['_OBJECTTREE']._serialized_end=303
-  _globals['_OBJECTNODE']._serialized_start=305
-  _globals['_OBJECTNODE']._serialized_end=386
-  _globals['_METHODCALL']._serialized_start=388
-  _globals['_METHODCALL']._serialized_end=492
-  _globals['_PROPERTYUPDATE']._serialized_start=494
-  _globals['_PROPERTYUPDATE']._serialized_end=600
-  _globals['_METHODS']._serialized_start=602
-  _globals['_METHODS']._serialized_end=628
-  _globals['_PROPERTIES']._serialized_start=630
-  _globals['_PROPERTIES']._serialized_end=686
-  _globals['_PROPERTYVALUE']._serialized_start=688
-  _globals['_PROPERTYVALUE']._serialized_end=760
-  _globals['_MARKERSERVICE']._serialized_start=763
-  _globals['_MARKERSERVICE']._serialized_end=895
-  _globals['_RECORDERSERVICE']._serialized_start=897
-  _globals['_RECORDERSERVICE']._serialized_end=986
-  _globals['_OBJECTSERVICE']._serialized_start=989
-  _globals['_OBJECTSERVICE']._serialized_end=1447
+  _globals['_RECORDERCOMMAND']._serialized_start=107
+  _globals['_RECORDERCOMMAND']._serialized_end=141
+  _globals['_OPTIONALOBJECT']._serialized_start=143
+  _globals['_OPTIONALOBJECT']._serialized_end=189
+  _globals['_OBJECT']._serialized_start=191
+  _globals['_OBJECT']._serialized_end=214
+  _globals['_OBJECTS']._serialized_start=216
+  _globals['_OBJECTS']._serialized_end=265
+  _globals['_OBJECTTREE']._serialized_start=267
+  _globals['_OBJECTTREE']._serialized_end=321
+  _globals['_OBJECTNODE']._serialized_start=323
+  _globals['_OBJECTNODE']._serialized_end=416
+  _globals['_METHODCALL']._serialized_start=418
+  _globals['_METHODCALL']._serialized_end=528
+  _globals['_PROPERTYUPDATE']._serialized_start=530
+  _globals['_PROPERTYUPDATE']._serialized_end=642
+  _globals['_METHODS']._serialized_start=644
+  _globals['_METHODS']._serialized_end=670
+  _globals['_PROPERTIES']._serialized_start=672
+  _globals['_PROPERTIES']._serialized_end=734
+  _globals['_PROPERTYVALUE']._serialized_start=736
+  _globals['_PROPERTYVALUE']._serialized_end=808
+  _globals['_OBJECTCHANGE']._serialized_start=811
+  _globals['_OBJECTCHANGE']._serialized_end=1038
+  _globals['_OBJECTADDED']._serialized_start=1040
+  _globals['_OBJECTADDED']._serialized_end=1131
+  _globals['_OBJECTREMOVED']._serialized_start=1133
+  _globals['_OBJECTREMOVED']._serialized_end=1187
+  _globals['_OBJECTREPARENTED']._serialized_start=1189
+  _globals['_OBJECTREPARENTED']._serialized_end=1285
+  _globals['_OBJECTRENAMED']._serialized_start=1287
+  _globals['_OBJECTRENAMED']._serialized_end=1388
+  _globals['_MARKERSERVICE']._serialized_start=1391
+  _globals['_MARKERSERVICE']._serialized_end=1523
+  _globals['_RECORDERSERVICE']._serialized_start=1525
+  _globals['_RECORDERSERVICE']._serialized_end=1620
+  _globals['_OBJECTSERVICE']._serialized_start=1623
+  _globals['_OBJECTSERVICE']._serialized_end=2245
 # @@protoc_insertion_point(module_scope)

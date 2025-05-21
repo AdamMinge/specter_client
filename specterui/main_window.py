@@ -1,3 +1,5 @@
+import typing
+
 from PySide6.QtWidgets import (
     QMainWindow,
     QSizePolicy,
@@ -8,12 +10,12 @@ from PySide6.QtWidgets import (
     QTreeView,
     QHeaderView,
 )
-from PySide6.QtCore import Signal, Qt, QAbstractItemModel
+from PySide6.QtCore import Signal, Qt, QModelIndex
 
 from pyside6_utils.widgets import DataClassTreeView
-from pyside6_utils.models import DataclassModel
 
 from specterui.client import Client
+from specterui.models import GRPCObjectsModel, GRPCPropertiesModel
 
 
 class ObjectsDock(QDockWidget):
@@ -26,7 +28,7 @@ class ObjectsDock(QDockWidget):
         self._init_connection()
 
     def _init_ui(self):
-        self._model = QAbstractItemModel()
+        self._model = GRPCObjectsModel(self._client)
         self._view = QTreeView()
         self._view.setModel(self._model)
         self._view.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
@@ -39,7 +41,17 @@ class ObjectsDock(QDockWidget):
         self.setWidget(container)
 
     def _init_connection(self):
-        pass
+        self._view.selectionModel().currentChanged.connect(self._on_selection_changed)
+
+    def _on_selection_changed(self, current: QModelIndex, _: QModelIndex):
+        query = None
+        if current.isValid():
+            query = self._model.data(
+                current.sibling(current.row(), GRPCObjectsModel.Columns.Query),
+                Qt.ItemDataRole.UserRole,
+            )
+
+        self.selected_object.emit(query)
 
 
 class PropertiesDock(QDockWidget):
@@ -49,7 +61,7 @@ class PropertiesDock(QDockWidget):
         self._init_ui()
 
     def _init_ui(self):
-        self._model = DataclassModel()
+        self._model = GRPCPropertiesModel(self._client)
         self._view = DataClassTreeView()
         self._view.setModel(self._model)
         self._view.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
@@ -65,6 +77,9 @@ class PropertiesDock(QDockWidget):
         container.setLayout(layout)
         self.setWidget(container)
 
+    def set_object(self, query: typing.Optional[str]):
+        self._model.set_object(query)
+
 
 class MethodsDock(QDockWidget):
     def __init__(self):
@@ -72,9 +87,9 @@ class MethodsDock(QDockWidget):
         self._init_ui()
 
     def _init_ui(self):
-        self._model = QAbstractItemModel()
+        #self._model = GRPCMethodsModel(self._client)
         self._view = QTableView()
-        self._view.setModel(self._model)
+        #self._view.setModel(self._model)
         self._view.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
         self._view.setAlternatingRowColors(True)
         self._view.horizontalHeader().setHidden(True)
@@ -129,4 +144,4 @@ class MainWindow(QMainWindow):
         self.tabifyDockWidget(self._terminal_dock, self._recorder_dock)
 
     def _init_connnection(self):
-        pass
+        self._objects_dock.selected_object.connect(self._properties_dock.set_object)

@@ -38,12 +38,12 @@ class MarkerServiceStub(object):
             channel: A grpc.Channel.
         """
         self.Start = channel.unary_unary(
-                '/specter.MarkerService/Start',
+                '/specter_proto.MarkerService/Start',
                 request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
         self.Stop = channel.unary_unary(
-                '/specter.MarkerService/Stop',
+                '/specter_proto.MarkerService/Stop',
                 request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
@@ -81,9 +81,9 @@ def add_MarkerServiceServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'specter.MarkerService', rpc_method_handlers)
+            'specter_proto.MarkerService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('specter.MarkerService', rpc_method_handlers)
+    server.add_registered_method_handlers('specter_proto.MarkerService', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
@@ -106,7 +106,7 @@ class MarkerService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/specter.MarkerService/Start',
+            '/specter_proto.MarkerService/Start',
             google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
@@ -133,7 +133,7 @@ class MarkerService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/specter.MarkerService/Stop',
+            '/specter_proto.MarkerService/Stop',
             google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
@@ -159,7 +159,7 @@ class RecorderServiceStub(object):
             channel: A grpc.Channel.
         """
         self.ListenCommands = channel.unary_stream(
-                '/specter.RecorderService/ListenCommands',
+                '/specter_proto.RecorderService/ListenCommands',
                 request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
                 response_deserializer=specterui_dot_proto_dot_specter__pb2.RecorderCommand.FromString,
                 _registered_method=True)
@@ -186,9 +186,9 @@ def add_RecorderServiceServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'specter.RecorderService', rpc_method_handlers)
+            'specter_proto.RecorderService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('specter.RecorderService', rpc_method_handlers)
+    server.add_registered_method_handlers('specter_proto.RecorderService', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
@@ -211,7 +211,7 @@ class RecorderService(object):
         return grpc.experimental.unary_stream(
             request,
             target,
-            '/specter.RecorderService/ListenCommands',
+            '/specter_proto.RecorderService/ListenCommands',
             google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             specterui_dot_proto_dot_specter__pb2.RecorderCommand.FromString,
             options,
@@ -237,44 +237,49 @@ class ObjectServiceStub(object):
             channel: A grpc.Channel.
         """
         self.GetTree = channel.unary_unary(
-                '/specter.ObjectService/GetTree',
+                '/specter_proto.ObjectService/GetTree',
                 request_serializer=specterui_dot_proto_dot_specter__pb2.OptionalObject.SerializeToString,
                 response_deserializer=specterui_dot_proto_dot_specter__pb2.ObjectTree.FromString,
                 _registered_method=True)
         self.Find = channel.unary_unary(
-                '/specter.ObjectService/Find',
+                '/specter_proto.ObjectService/Find',
                 request_serializer=specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
                 response_deserializer=specterui_dot_proto_dot_specter__pb2.Objects.FromString,
                 _registered_method=True)
         self.GetParent = channel.unary_unary(
-                '/specter.ObjectService/GetParent',
+                '/specter_proto.ObjectService/GetParent',
                 request_serializer=specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
                 response_deserializer=specterui_dot_proto_dot_specter__pb2.Object.FromString,
                 _registered_method=True)
         self.GetChildren = channel.unary_unary(
-                '/specter.ObjectService/GetChildren',
+                '/specter_proto.ObjectService/GetChildren',
                 request_serializer=specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
                 response_deserializer=specterui_dot_proto_dot_specter__pb2.Objects.FromString,
                 _registered_method=True)
         self.CallMethod = channel.unary_unary(
-                '/specter.ObjectService/CallMethod',
+                '/specter_proto.ObjectService/CallMethod',
                 request_serializer=specterui_dot_proto_dot_specter__pb2.MethodCall.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
         self.UpdateProperty = channel.unary_unary(
-                '/specter.ObjectService/UpdateProperty',
+                '/specter_proto.ObjectService/UpdateProperty',
                 request_serializer=specterui_dot_proto_dot_specter__pb2.PropertyUpdate.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
         self.GetMethods = channel.unary_unary(
-                '/specter.ObjectService/GetMethods',
+                '/specter_proto.ObjectService/GetMethods',
                 request_serializer=specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
                 response_deserializer=specterui_dot_proto_dot_specter__pb2.Methods.FromString,
                 _registered_method=True)
         self.GetProperties = channel.unary_unary(
-                '/specter.ObjectService/GetProperties',
+                '/specter_proto.ObjectService/GetProperties',
                 request_serializer=specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
                 response_deserializer=specterui_dot_proto_dot_specter__pb2.Properties.FromString,
+                _registered_method=True)
+        self.ListenObjectChanges = channel.unary_stream(
+                '/specter_proto.ObjectService/ListenObjectChanges',
+                request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+                response_deserializer=specterui_dot_proto_dot_specter__pb2.ObjectChange.FromString,
                 _registered_method=True)
 
 
@@ -331,6 +336,12 @@ class ObjectServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ListenObjectChanges(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ObjectServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -374,11 +385,16 @@ def add_ObjectServiceServicer_to_server(servicer, server):
                     request_deserializer=specterui_dot_proto_dot_specter__pb2.Object.FromString,
                     response_serializer=specterui_dot_proto_dot_specter__pb2.Properties.SerializeToString,
             ),
+            'ListenObjectChanges': grpc.unary_stream_rpc_method_handler(
+                    servicer.ListenObjectChanges,
+                    request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                    response_serializer=specterui_dot_proto_dot_specter__pb2.ObjectChange.SerializeToString,
+            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'specter.ObjectService', rpc_method_handlers)
+            'specter_proto.ObjectService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('specter.ObjectService', rpc_method_handlers)
+    server.add_registered_method_handlers('specter_proto.ObjectService', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
@@ -401,7 +417,7 @@ class ObjectService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/specter.ObjectService/GetTree',
+            '/specter_proto.ObjectService/GetTree',
             specterui_dot_proto_dot_specter__pb2.OptionalObject.SerializeToString,
             specterui_dot_proto_dot_specter__pb2.ObjectTree.FromString,
             options,
@@ -428,7 +444,7 @@ class ObjectService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/specter.ObjectService/Find',
+            '/specter_proto.ObjectService/Find',
             specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
             specterui_dot_proto_dot_specter__pb2.Objects.FromString,
             options,
@@ -455,7 +471,7 @@ class ObjectService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/specter.ObjectService/GetParent',
+            '/specter_proto.ObjectService/GetParent',
             specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
             specterui_dot_proto_dot_specter__pb2.Object.FromString,
             options,
@@ -482,7 +498,7 @@ class ObjectService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/specter.ObjectService/GetChildren',
+            '/specter_proto.ObjectService/GetChildren',
             specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
             specterui_dot_proto_dot_specter__pb2.Objects.FromString,
             options,
@@ -509,7 +525,7 @@ class ObjectService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/specter.ObjectService/CallMethod',
+            '/specter_proto.ObjectService/CallMethod',
             specterui_dot_proto_dot_specter__pb2.MethodCall.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
@@ -536,7 +552,7 @@ class ObjectService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/specter.ObjectService/UpdateProperty',
+            '/specter_proto.ObjectService/UpdateProperty',
             specterui_dot_proto_dot_specter__pb2.PropertyUpdate.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
@@ -563,7 +579,7 @@ class ObjectService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/specter.ObjectService/GetMethods',
+            '/specter_proto.ObjectService/GetMethods',
             specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
             specterui_dot_proto_dot_specter__pb2.Methods.FromString,
             options,
@@ -590,9 +606,36 @@ class ObjectService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/specter.ObjectService/GetProperties',
+            '/specter_proto.ObjectService/GetProperties',
             specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
             specterui_dot_proto_dot_specter__pb2.Properties.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListenObjectChanges(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(
+            request,
+            target,
+            '/specter_proto.ObjectService/ListenObjectChanges',
+            google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            specterui_dot_proto_dot_specter__pb2.ObjectChange.FromString,
             options,
             channel_credentials,
             insecure,
