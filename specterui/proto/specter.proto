@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
+
+package specter;
+
+// --------------------------------- Marker --------------------------------- //
+
+service MarkerService {
+    rpc Start (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+    rpc Stop (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}
+
+// --------------------------------- Recorder -------------------------------- //
+
+service RecorderService {
+    rpc ListenCommands (google.protobuf.Empty) returns (stream RecorderCommand) {}
+}
+
+message RecorderCommand {
+    string command = 1;
+}
+
+// --------------------------------- Object ---------------------------------- //
+
+service ObjectService {
+    rpc GetTree (OptionalObject) returns (ObjectTree) {}
+    rpc Find (Object) returns (Objects) {}
+
+    rpc GetParent (Object) returns (Object) {}
+    rpc GetChildren (Object) returns (Objects) {}
+
+    rpc CallMethod (MethodCall) returns (google.protobuf.Empty) {}
+    rpc UpdateProperty (PropertyUpdate) returns (google.protobuf.Empty) {}
+
+    rpc GetMethods (Object) returns (Methods) {}
+    rpc GetProperties (Object) returns (Properties) {}
+}
+
+message OptionalObject {
+    optional string query = 1;
+}
+
+message Object {
+    string query = 1;
+}
+
+message Objects {
+    repeated Object objects = 1;
+}
+
+message ObjectTree {
+    repeated ObjectNode nodes = 1;
+}
+
+message ObjectNode {
+    Object object = 1;
+    repeated ObjectNode nodes = 2;
+}
+
+message MethodCall {
+    Object object = 1;
+    string method = 2;
+    repeated google.protobuf.Value arguments = 3;
+}
+
+message PropertyUpdate {
+    Object object = 1;
+    string property = 2;
+    google.protobuf.Value value = 3;
+}
+
+message Methods {
+    repeated string methods = 1;
+}
+
+message Properties {
+    repeated PropertyValue properties = 1;
+}
+
+message PropertyValue {
+    string property = 1;
+    google.protobuf.Value value = 2;
+}
