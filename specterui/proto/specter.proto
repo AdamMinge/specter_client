@@ -134,5 +134,7 @@ message PropertyRemoved {
 
 message PropertyUpdated {
     string property = 1;
-    google.protobuf.Value value = 2;
+    google.protobuf.Value old_value = 2;
+    google.protobuf.Value new_value = 3;
+    
 }
