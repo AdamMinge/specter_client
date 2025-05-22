@@ -8,6 +8,25 @@ from specterui.proto.specter_pb2 import Object
 
 from specterui.client import Client
 
+class ObservableDict(dict):
+    def __init__(self, *args, on_change=None, skip_set=True, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__on_change = on_change
+        self.__skip_set = skip_set
+
+    def __setitem__(self, key, value):
+        old_value = self.get(key, None)
+        if old_value != value:
+            self.__super_setitem__(key, value)
+            if self.__on_change:
+                self.__on_change(key, old_value, value)
+        else:
+            self.__super_setitem__(key, value)
+    
+    def __super_setitem__(self, key, value):
+        if not self.__skip_set:
+            super().__setitem__(key, value)
+
 
 class GRPCPropertiesModel(DataclassModel):
     EmptyDataclass = dataclasses.make_dataclass("EmptyDataclass", [])
@@ -56,12 +75,23 @@ class GRPCPropertiesModel(DataclassModel):
 
             values[field_name] = field_value
 
+        dataclass_instance = self.create_properties_dataclass(fields, values)
+        self.set_dataclass_instance(dataclass_instance)
+
+    def create_properties_dataclass(self, fields: list[typing.Any], values: dict[typing.Any]):
         DynamicPropertiesDataclass = dataclasses.make_dataclass(
             "DynamicProperties", fields
         )
 
         dataclass_instance = DynamicPropertiesDataclass(**values)
-        self.set_dataclass_instance(dataclass_instance)
+
+        observed_dict = ObservableDict(dataclass_instance.__dict__, on_change=self.change_property)
+        object.__setattr__(dataclass_instance, '__dict__', observed_dict)
+
+        return dataclass_instance
+    
+    def change_property(self, field_name: str, old_value: typing.Any, new_value: typing.Any):
+        pass
 
     def handle_properties_changes(self):
         pass

@@ -82,8 +82,9 @@ class PropertiesDock(QDockWidget):
 
 
 class MethodsDock(QDockWidget):
-    def __init__(self):
+    def __init__(self, client: Client):
         super().__init__("Methods")
+        self._client = client
         self._init_ui()
 
     def _init_ui(self):
@@ -99,6 +100,9 @@ class MethodsDock(QDockWidget):
         layout.addWidget(self._view)
         container.setLayout(layout)
         self.setWidget(container)
+
+    def set_object(self, query: typing.Optional[str]):
+        pass
 
 
 class RecorderDock(QDockWidget):
@@ -130,7 +134,7 @@ class MainWindow(QMainWindow):
 
         self._objects_dock = ObjectsDock(self._client)
         self._properties_dock = PropertiesDock(self._client)
-        self._methods_dock = MethodsDock()
+        self._methods_dock = MethodsDock(self._client)
         self._terminal_dock = TerminalDock()
         self._recorder_dock = RecorderDock()
 
@@ -145,3 +149,4 @@ class MainWindow(QMainWindow):
 
     def _init_connnection(self):
         self._objects_dock.selected_object.connect(self._properties_dock.set_object)
+        self._objects_dock.selected_object.connect(self._methods_dock.set_object)
