@@ -276,10 +276,15 @@ class ObjectServiceStub(object):
                 request_serializer=specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
                 response_deserializer=specterui_dot_proto_dot_specter__pb2.Properties.FromString,
                 _registered_method=True)
-        self.ListenObjectChanges = channel.unary_stream(
-                '/specter_proto.ObjectService/ListenObjectChanges',
+        self.ListenTreeChanges = channel.unary_stream(
+                '/specter_proto.ObjectService/ListenTreeChanges',
                 request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
                 response_deserializer=specterui_dot_proto_dot_specter__pb2.ObjectChange.FromString,
+                _registered_method=True)
+        self.ListenPropertiesChanges = channel.unary_stream(
+                '/specter_proto.ObjectService/ListenPropertiesChanges',
+                request_serializer=specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
+                response_deserializer=specterui_dot_proto_dot_specter__pb2.PropertyChange.FromString,
                 _registered_method=True)
 
 
@@ -336,7 +341,13 @@ class ObjectServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def ListenObjectChanges(self, request, context):
+    def ListenTreeChanges(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListenPropertiesChanges(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -385,10 +396,15 @@ def add_ObjectServiceServicer_to_server(servicer, server):
                     request_deserializer=specterui_dot_proto_dot_specter__pb2.Object.FromString,
                     response_serializer=specterui_dot_proto_dot_specter__pb2.Properties.SerializeToString,
             ),
-            'ListenObjectChanges': grpc.unary_stream_rpc_method_handler(
-                    servicer.ListenObjectChanges,
+            'ListenTreeChanges': grpc.unary_stream_rpc_method_handler(
+                    servicer.ListenTreeChanges,
                     request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                     response_serializer=specterui_dot_proto_dot_specter__pb2.ObjectChange.SerializeToString,
+            ),
+            'ListenPropertiesChanges': grpc.unary_stream_rpc_method_handler(
+                    servicer.ListenPropertiesChanges,
+                    request_deserializer=specterui_dot_proto_dot_specter__pb2.Object.FromString,
+                    response_serializer=specterui_dot_proto_dot_specter__pb2.PropertyChange.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -620,7 +636,7 @@ class ObjectService(object):
             _registered_method=True)
 
     @staticmethod
-    def ListenObjectChanges(request,
+    def ListenTreeChanges(request,
             target,
             options=(),
             channel_credentials=None,
@@ -633,9 +649,36 @@ class ObjectService(object):
         return grpc.experimental.unary_stream(
             request,
             target,
-            '/specter_proto.ObjectService/ListenObjectChanges',
+            '/specter_proto.ObjectService/ListenTreeChanges',
             google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             specterui_dot_proto_dot_specter__pb2.ObjectChange.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListenPropertiesChanges(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(
+            request,
+            target,
+            '/specter_proto.ObjectService/ListenPropertiesChanges',
+            specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
+            specterui_dot_proto_dot_specter__pb2.PropertyChange.FromString,
             options,
             channel_credentials,
             insecure,

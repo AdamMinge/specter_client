@@ -225,7 +225,7 @@ class GRPCObjectsModel(ObjectsModel):
             self.build_tree(object_node.nodes, node_index)
 
     def handle_tree_changes(self):
-        for change in self._client.object_stub.ListenObjectChanges(empty_pb2.Empty()):
+        for change in self._client.object_stub.ListenTreeChanges(empty_pb2.Empty()):
             if change.HasField("added"):
                 QMetaObject.invokeMethod(
                     self,

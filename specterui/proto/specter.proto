@@ -37,7 +37,8 @@ service ObjectService {
     rpc GetMethods (Object) returns (Methods) {}
     rpc GetProperties (Object) returns (Properties) {}
 
-    rpc ListenObjectChanges (google.protobuf.Empty) returns (stream ObjectChange) {}
+    rpc ListenTreeChanges (google.protobuf.Empty) returns (stream ObjectChange) {}
+    rpc ListenPropertiesChanges (Object) returns (stream PropertyChange) {}
 }
 
 message OptionalObject {
@@ -78,10 +79,10 @@ message Methods {
 }
 
 message Properties {
-    repeated PropertyValue properties = 1;
+    repeated Property properties = 1;
 }
 
-message PropertyValue {
+message Property {
     string property = 1;
     google.protobuf.Value value = 2;
 }
@@ -112,4 +113,26 @@ message ObjectReparented {
 message ObjectRenamed {
     Object old_object = 1;
     Object new_object = 2;
+}
+
+message PropertyChange {
+    oneof change_type {
+        PropertyAdded added = 1;
+        PropertyRemoved removed = 2;
+        PropertyUpdated updated = 4;
+    }
+}
+
+message PropertyAdded {
+    string property = 1;
+    google.protobuf.Value value = 2;
+}
+
+message PropertyRemoved {
+    string property = 1;
+}
+
+message PropertyUpdated {
+    string property = 1;
+    google.protobuf.Value value = 2;
 }
