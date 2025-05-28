@@ -1,12 +1,17 @@
 import typing
-import threading
 import dataclasses
 
+from PySide6.QtCore import (
+    Qt,
+    QMetaObject,
+    Slot,
+    Q_ARG,
+)
 from pyside6_utils.models import DataclassModel
 
 from specterui.proto.specter_pb2 import Object
 
-from specterui.client import Client
+from specterui.client import Client, StreamReader
 
 class ObservableDict(dict):
     def __init__(self, *args, on_change=None, skip_set=True, **kwargs):
@@ -35,15 +40,11 @@ class GRPCPropertiesModel(DataclassModel):
         super().__init__(GRPCPropertiesModel.EmptyDataclass(), parent)
 
         self._client = client
+        self._stream_reader = None
         self.set_object(None)
 
-        self._watch_thread = threading.Thread(
-            target=self.handle_properties_changes, daemon=True
-        )
-        self._watch_thread.start()
-
     def fetch_initial_state(self):
-        if self._object == None:
+        if self._object is None:
             self.set_dataclass_instance(GRPCPropertiesModel.EmptyDataclass())
             return
 
@@ -93,12 +94,58 @@ class GRPCPropertiesModel(DataclassModel):
     def change_property(self, field_name: str, old_value: typing.Any, new_value: typing.Any):
         pass
 
-    def handle_properties_changes(self):
-        pass
+    def handle_properties_changes(self, change):
+        if change.HasField("added"):
+            QMetaObject.invokeMethod(
+                self,
+                "handle_property_added",
+                Qt.QueuedConnection,
+                Q_ARG(str, change.added.property),
+                Q_ARG("QVariant", change.added.value),
+            )
+        elif change.HasField("removed"):
+            QMetaObject.invokeMethod(
+                self,
+                "handle_property_removed",
+                Qt.QueuedConnection,
+                Q_ARG(str, change.removed.property),
+            )
+        elif change.HasField("updated"):
+            QMetaObject.invokeMethod(
+                self,
+                "handle_property_updated",
+                Qt.QueuedConnection,
+                Q_ARG(str, change.updated.property),
+                Q_ARG("QVariant", change.updated.old_value),
+                Q_ARG("QVariant", change.updated.new_value),
+            )
+
+    @Slot(str, "QVariant")
+    def handle_property_added(self, property, value):
+        print(f"handle_property_added({property},{value})")
+
+    @Slot(str, "QVariant")
+    def handle_property_removed(self, property):
+        print(f"handle_property_removed({property})")
+
+    @Slot(str, "QVariant", "QVariant")
+    def handle_property_updated(self, property, old_value, new_value):
+        print(f"handle_property_updated({property},{old_value}, {new_value})")
 
     def set_object(self, query: typing.Optional[str]):
         self._object = query
         self.fetch_initial_state()
+
+        if self._stream_reader:
+            self._stream_reader.stop()
+
+        if self._object is not None:
+            self._stream_reader = StreamReader(
+                stream=self._client.object_stub.ListenPropertiesChanges(Object(query=self._object)),
+                on_data=self.handle_properties_changes
+            )
+        else:
+            self._stream_reader = None
 
     def convert_value(self, value):
         if value.HasField("string_value"):

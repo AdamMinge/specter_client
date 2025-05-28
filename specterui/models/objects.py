@@ -14,7 +14,7 @@ from PySide6.QtCore import (
 from google.protobuf import empty_pb2
 from specterui.proto.specter_pb2 import OptionalObject
 
-from specterui.client import Client
+from specterui.client import Client, StreamReader
 
 
 class ObjectNode:
@@ -210,10 +210,10 @@ class GRPCObjectsModel(ObjectsModel):
 
         self.fetch_initial_state()
 
-        self._watch_thread = threading.Thread(
-            target=self.handle_tree_changes, daemon=True
+        self._stream_reader = StreamReader(
+            stream=self._client.object_stub.ListenTreeChanges(empty_pb2.Empty()),
+            on_data=self.handle_tree_changes
         )
-        self._watch_thread.start()
 
     def fetch_initial_state(self):
         response = self._client.object_stub.GetTree(OptionalObject())
@@ -224,39 +224,38 @@ class GRPCObjectsModel(ObjectsModel):
             node_index = self.createItem(object_node.object.query, parent_index)
             self.build_tree(object_node.nodes, node_index)
 
-    def handle_tree_changes(self):
-        for change in self._client.object_stub.ListenTreeChanges(empty_pb2.Empty()):
-            if change.HasField("added"):
-                QMetaObject.invokeMethod(
-                    self,
-                    "handle_object_added",
-                    Qt.QueuedConnection,
-                    Q_ARG(str, change.added.object.query),
-                    Q_ARG(str, change.added.parent.query),
-                )
-            elif change.HasField("removed"):
-                QMetaObject.invokeMethod(
-                    self,
-                    "handle_object_removed",
-                    Qt.QueuedConnection,
-                    Q_ARG(str, change.removed.object.query),
-                )
-            elif change.HasField("reparented"):
-                QMetaObject.invokeMethod(
-                    self,
-                    "handle_object_reparented",
-                    Qt.QueuedConnection,
-                    Q_ARG(str, change.reparented.object.query),
-                    Q_ARG(str, change.reparented.parent.query),
-                )
-            elif change.HasField("renamed"):
-                QMetaObject.invokeMethod(
-                    self,
-                    "handle_object_renamed",
-                    Qt.QueuedConnection,
-                    Q_ARG(str, change.renamed.old_object.query),
-                    Q_ARG(str, change.renamed.new_object.query),
-                )
+    def handle_tree_changes(self, change):
+        if change.HasField("added"):
+            QMetaObject.invokeMethod(
+                self,
+                "handle_object_added",
+                Qt.QueuedConnection,
+                Q_ARG(str, change.added.object.query),
+                Q_ARG(str, change.added.parent.query),
+            )
+        elif change.HasField("removed"):
+            QMetaObject.invokeMethod(
+                self,
+                "handle_object_removed",
+                Qt.QueuedConnection,
+                Q_ARG(str, change.removed.object.query),
+            )
+        elif change.HasField("reparented"):
+            QMetaObject.invokeMethod(
+                self,
+                "handle_object_reparented",
+                Qt.QueuedConnection,
+                Q_ARG(str, change.reparented.object.query),
+                Q_ARG(str, change.reparented.parent.query),
+            )
+        elif change.HasField("renamed"):
+            QMetaObject.invokeMethod(
+                self,
+                "handle_object_renamed",
+                Qt.QueuedConnection,
+                Q_ARG(str, change.renamed.old_object.query),
+                Q_ARG(str, change.renamed.new_object.query),
+            )
 
     @Slot(str, str)
     def handle_object_added(self, object, parent):
