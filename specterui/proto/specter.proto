@@ -85,6 +85,7 @@ message Properties {
 message Property {
     string property = 1;
     google.protobuf.Value value = 2;
+    bool read_only = 3;
 }
 
 message ObjectChange {
@@ -126,6 +127,7 @@ message PropertyChange {
 message PropertyAdded {
     string property = 1;
     google.protobuf.Value value = 2;
+    bool read_only = 3;
 }
 
 message PropertyRemoved {

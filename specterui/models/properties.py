@@ -9,8 +9,9 @@ from PySide6.QtCore import (
 )
 from pyside6_utils.models import DataclassModel
 
-from specterui.proto.specter_pb2 import Object
+from google.protobuf.struct_pb2 import Value
 
+from specterui.proto.specter_pb2 import Object, PropertyUpdate
 from specterui.client import Client, StreamReader
 
 class ObservableDict(dict):
@@ -21,16 +22,15 @@ class ObservableDict(dict):
 
     def __setitem__(self, key, value):
         old_value = self.get(key, None)
-        if old_value != value:
-            self.__super_setitem__(key, value)
-            if self.__on_change:
-                self.__on_change(key, old_value, value)
-        else:
-            self.__super_setitem__(key, value)
-    
-    def __super_setitem__(self, key, value):
+
         if not self.__skip_set:
-            super().__setitem__(key, value)
+            self._super_setitem(key, value)
+
+        if old_value != value and self.__on_change:
+            self.__on_change(key, old_value, value)
+
+    def _super_setitem(self, key, value):
+        super().__setitem__(key, value)
 
 
 class GRPCPropertiesModel(DataclassModel):
@@ -55,23 +55,26 @@ class GRPCPropertiesModel(DataclassModel):
 
         for prop in response.properties:
             field_name = prop.property
-            field_value = self.convert_value(prop.value)
+            field_value = self.convert_from_value(prop.value)
+            field_editable = not prop.read_only
+
             if field_value == None:
                 continue
 
             field_type = type(field_value)
+            metadata = {"editable": field_editable}
 
             if isinstance(field_value, (list, dict, set)):
                 fields.append(
                     (
                         field_name,
                         field_type,
-                        dataclasses.field(default_factory=lambda: field_value),
+                        dataclasses.field(default_factory=lambda: field_value, metadata=metadata),
                     )
                 )
             else:
                 fields.append(
-                    (field_name, field_type, dataclasses.field(default=field_value))
+                    (field_name, field_type, dataclasses.field(default=field_value, metadata=metadata))
                 )
 
             values[field_name] = field_value
@@ -92,7 +95,13 @@ class GRPCPropertiesModel(DataclassModel):
         return dataclass_instance
     
     def change_property(self, field_name: str, old_value: typing.Any, new_value: typing.Any):
-        pass
+        self._client.object_stub.UpdateProperty(
+            PropertyUpdate(
+                object=Object(query=self._object), 
+                property=field_name, 
+                value=self.convert_to_value(new_value)
+            )
+        )
 
     def handle_properties_changes(self, change):
         if change.HasField("added"):
@@ -122,15 +131,20 @@ class GRPCPropertiesModel(DataclassModel):
 
     @Slot(str, "QVariant")
     def handle_property_added(self, property, value):
-        print(f"handle_property_added({property},{value})")
+        pass
 
     @Slot(str, "QVariant")
     def handle_property_removed(self, property):
-        print(f"handle_property_removed({property})")
+        pass
 
     @Slot(str, "QVariant", "QVariant")
     def handle_property_updated(self, property, old_value, new_value):
-        print(f"handle_property_updated({property},{old_value}, {new_value})")
+        index = self.find_index(property)
+        if index is not None:
+            instance = self.get_dataclass()
+            observed_dict: ObservableDict = getattr(instance, '__dict__')
+            observed_dict._super_setitem(property, self.convert_from_value(new_value))
+            self.dataChanged.emit(self.index(index.row(), 0, index.parent()), self.index(index.row(), 1, index.parent()))
 
     def set_object(self, query: typing.Optional[str]):
         self._object = query
@@ -147,7 +161,7 @@ class GRPCPropertiesModel(DataclassModel):
         else:
             self._stream_reader = None
 
-    def convert_value(self, value):
+    def convert_from_value(self, value: Value) -> typing.Any:
         if value.HasField("string_value"):
             return value.string_value
         elif value.HasField("number_value"):
@@ -155,9 +169,28 @@ class GRPCPropertiesModel(DataclassModel):
         elif value.HasField("bool_value"):
             return value.bool_value
         elif value.HasField("list_value"):
-            return [self._convert_value(v) for v in value.list_value.values]
+            return [self.convert_from_value(v) for v in value.list_value.values]
         elif value.HasField("struct_value"):
             return {
-                k: self._convert_value(v) for k, v in value.struct_value.fields.items()
+                k: self.convert_from_value(v) for k, v in value.struct_value.fields.items()
             }
+        return None
+    
+    def convert_to_value(self, value: typing.Any) -> Value:
+        v = Value()
+        if isinstance(value, bool):
+            v.bool_value = value
+        elif isinstance(value, (int, float)):
+            v.number_value = float(value)
+        elif isinstance(value, str):
+            v.string_value = value
+        else:
+            return None
+        return v
+    
+    def find_index(self, property_name: str):
+        for row in range(self.rowCount()):
+            index = self.index(row, 0)
+            if index.data(Qt.ItemDataRole.DisplayRole) == property_name:
+                return index
         return None
