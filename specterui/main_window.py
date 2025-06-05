@@ -42,6 +42,7 @@ class ObjectsDock(QDockWidget):
 
     def _init_connection(self):
         self._view.selectionModel().currentChanged.connect(self._on_selection_changed)
+        self._model.dataChanged.connect(self._on_data_changed)
 
     def _on_selection_changed(self, current: QModelIndex, _: QModelIndex):
         query = None
@@ -52,6 +53,25 @@ class ObjectsDock(QDockWidget):
             )
 
         self.selected_object.emit(query)
+
+    def _on_data_changed(self, topLeft: QModelIndex, bottomRight: QModelIndex, roles=None):
+        current_index = self._view.currentIndex()
+
+        if not current_index.isValid():
+            return
+        
+        if current_index.parent() != topLeft.parent():
+            return
+
+        if (topLeft.row() <= current_index.row() <= bottomRight.row() and
+            topLeft.column() <= current_index.column() <= bottomRight.column()):
+
+            query = self._model.data(
+                current_index.sibling(current_index.row(), GRPCObjectsModel.Columns.Query),
+                Qt.ItemDataRole.UserRole,
+            )
+
+            self.selected_object.emit(query)
 
 
 class PropertiesDock(QDockWidget):
