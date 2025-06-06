@@ -152,11 +152,11 @@ The compiled executable will be located in the directory you set under exec_dire
 <!-- ROADMAP -->
 ## Roadmap
 
-- [ ] Objects Dock
-  - [ ] Display object hierarchy
-- [ ] Properties Dock
-  - [ ] Display selected object properties
-  - [ ] Add / Remove / Edit object properties
+- [x] Objects Dock
+  - [x] Display object hierarchy
+- [x] Properties Dock
+  - [x] Display selected object properties
+  - [x] Edit object properties
 - [ ] Methods Dock
   - [ ] Display available methods of selected object
   - [ ] Call selected method with parameters
