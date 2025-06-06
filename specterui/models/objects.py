@@ -1,7 +1,6 @@
 import json
 import enum
 import typing
-import threading
 
 from PySide6.QtCore import (
     Qt,
