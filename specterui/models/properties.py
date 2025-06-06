@@ -6,13 +6,12 @@ from PySide6.QtCore import (
     QMetaObject,
     Slot,
     Q_ARG,
+    QModelIndex
 )
 from pyside6_utils.models import DataclassModel
 
-from google.protobuf.struct_pb2 import Value
-
 from specterui.proto.specter_pb2 import Object, PropertyUpdate
-from specterui.client import Client, StreamReader
+from specterui.client import Client, StreamReader, convert_to_value, convert_from_value
 
 class ObservableDict(dict):
     def __init__(self, *args, on_change=None, skip_set=True, **kwargs):
@@ -34,7 +33,7 @@ class ObservableDict(dict):
 
 
 class GRPCPropertiesModel(DataclassModel):
-    EmptyDataclass = dataclasses.make_dataclass("EmptyDataclass", [])
+    EmptyDataclass = dataclasses.make_dataclass('EmptyDataclass', [])
 
     def __init__(self, client: Client, parent=None):
         super().__init__(GRPCPropertiesModel.EmptyDataclass(), parent)
@@ -54,30 +53,21 @@ class GRPCPropertiesModel(DataclassModel):
         values = {}
 
         for prop in response.properties:
-            field_name = prop.property
-            field_value = self.convert_from_value(prop.value)
-            field_editable = not prop.read_only
+            base_path = prop.property
+            base_value = convert_from_value(prop.value)
+            editable = not prop.read_only
 
-            if field_value == None:
+            if base_value is None:
                 continue
 
-            field_type = type(field_value)
-            metadata = {"editable": field_editable}
-
-            if isinstance(field_value, (list, dict, set)):
-                fields.append(
-                    (
-                        field_name,
-                        field_type,
-                        dataclasses.field(default_factory=lambda: field_value, metadata=metadata),
-                    )
-                )
-            else:
-                fields.append(
-                    (field_name, field_type, dataclasses.field(default=field_value, metadata=metadata))
-                )
-
-            values[field_name] = field_value
+            self.flatten_dict_field(
+                fields,
+                values,
+                base_value,
+                base_path,
+                field_prefix=base_path,
+                editable=editable
+            )
 
         dataclass_instance = self.create_properties_dataclass(fields, values)
         self.set_dataclass_instance(dataclass_instance)
@@ -94,12 +84,68 @@ class GRPCPropertiesModel(DataclassModel):
 
         return dataclass_instance
     
+    def flatten_dict_field(self, fields: list, values: dict, current_value: typing.Any, full_path: str, field_prefix: str, editable: bool):
+        display_path = '/'.join(full_path.split('/')[:-1])
+        display_name = field_prefix.split('_')[-1]
+
+        metadata = {
+            "editable": editable,
+            "display_name": display_name,
+        }
+        if display_path:
+            metadata["display_path"] = f"{display_path}"
+
+        if isinstance(current_value, dict):
+            for key, sub_value in current_value.items():
+                sub_prefix = f"{field_prefix}_{key}" if field_prefix else key
+                sub_path = f"{full_path}/{key}" if full_path else key
+                self.flatten_dict_field(fields, values, sub_value, sub_path, sub_prefix, editable)
+        elif isinstance(current_value, (list, set)):
+            fields.append(
+                (field_prefix, type(current_value), dataclasses.field(default_factory=lambda: current_value, metadata=metadata))
+            )
+            values[field_prefix] = current_value
+        else:
+            fields.append(
+                (field_prefix, type(current_value), dataclasses.field(default=current_value, metadata=metadata))
+            )
+            values[field_prefix] = current_value
+    
     def change_property(self, field_name: str, old_value: typing.Any, new_value: typing.Any):
+        instance = self.get_dataclass()
+        observed_dict: ObservableDict = getattr(instance, '__dict__')
+        root_field = field_name.split('_', 1)[0]
+        
+        nested_items = {
+            k[len(root_field) + 1:]: (new_value if k == field_name else v)
+            for k, v in observed_dict.items()
+            if k == root_field or k.startswith(f"{root_field}_")
+        }
+
+        def nest(keys: list[str], val):
+            if not keys:
+                return val
+            return {keys[0]: nest(keys[1:], val)}
+
+        merged = {}
+        for key, val in nested_items.items():
+            keys = key.split('_') if key else []
+            sub_tree = nest(keys, val)
+
+            def deep_merge(target, src):
+                for k, v in src.items():
+                    if isinstance(v, dict) and k in target and isinstance(target[k], dict):
+                        deep_merge(target[k], v)
+                    else:
+                        target[k] = v
+
+            deep_merge(merged, sub_tree)
+
         self._client.object_stub.UpdateProperty(
             PropertyUpdate(
-                object=Object(query=self._object), 
-                property=field_name, 
-                value=self.convert_to_value(new_value)
+                object=Object(query=self._object),
+                property=root_field,
+                value=convert_to_value(merged)
             )
         )
 
@@ -139,12 +185,27 @@ class GRPCPropertiesModel(DataclassModel):
 
     @Slot(str, "QVariant", "QVariant")
     def handle_property_updated(self, property, old_value, new_value):
-        index = self.find_index(property)
-        if index is not None:
-            instance = self.get_dataclass()
-            observed_dict: ObservableDict = getattr(instance, '__dict__')
-            observed_dict._super_setitem(property, self.convert_from_value(new_value))
-            self.dataChanged.emit(self.index(index.row(), 0, index.parent()), self.index(index.row(), 1, index.parent()))
+        instance = self.get_dataclass()
+        observed_dict: ObservableDict = getattr(instance, '__dict__')
+        updated_value = convert_from_value(new_value)
+
+        def flatten(prefix: str, value):
+            result = {}
+            if isinstance(value, dict):
+                for k, v in value.items():
+                    nested = flatten(f"{prefix}_{k}" if prefix else k, v)
+                    result.update(nested)
+            else:
+                result[prefix] = value
+            return result
+
+        flat_updates = flatten(property, updated_value)
+
+        for k, v in flat_updates.items():
+            if k in observed_dict:
+                index = self.find_index(k)
+                observed_dict._super_setitem(k, v)
+                self.dataChanged.emit(self.index(index.row(), 0, index.parent()), self.index(index.row(), 1, index.parent()))
 
     def set_object(self, query: typing.Optional[str]):
         self._object = query
@@ -160,37 +221,20 @@ class GRPCPropertiesModel(DataclassModel):
             )
         else:
             self._stream_reader = None
+    
+    def find_index(self, property_name: str, parent: QModelIndex = QModelIndex()) -> QModelIndex | None:
+        for row in range(self.rowCount(parent)):
+            index = self.index(row, 0, parent)
+            if not index.isValid():
+                continue
 
-    def convert_from_value(self, value: Value) -> typing.Any:
-        if value.HasField("string_value"):
-            return value.string_value
-        elif value.HasField("number_value"):
-            return value.number_value
-        elif value.HasField("bool_value"):
-            return value.bool_value
-        elif value.HasField("list_value"):
-            return [self.convert_from_value(v) for v in value.list_value.values]
-        elif value.HasField("struct_value"):
-            return {
-                k: self.convert_from_value(v) for k, v in value.struct_value.fields.items()
-            }
-        return None
-    
-    def convert_to_value(self, value: typing.Any) -> Value:
-        v = Value()
-        if isinstance(value, bool):
-            v.bool_value = value
-        elif isinstance(value, (int, float)):
-            v.number_value = float(value)
-        elif isinstance(value, str):
-            v.string_value = value
-        else:
-            return None
-        return v
-    
-    def find_index(self, property_name: str):
-        for row in range(self.rowCount()):
-            index = self.index(row, 0)
-            if index.data(Qt.ItemDataRole.DisplayRole) == property_name:
-                return index
+            field = index.data(DataclassModel.CustomDataRoles.FieldRole)
+            if field is not None:
+                if field.name == property_name:
+                    return index
+
+            child_index = self.find_index(property_name, parent=index)
+            if child_index is not None:
+                return child_index
+
         return None
