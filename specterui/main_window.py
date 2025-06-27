@@ -141,6 +141,7 @@ class RecorderDock(QDockWidget):
         self._model = ConsoleModel()
         self._view = ConsoleWidget(ui_text_min_update_interval=0.1, display_max_blocks=5000)
         self._view.set_model(self._model)
+        self._view.set_console_width_percentage(80)
 
         self._new_button = self._make_tool_button("New", ":/icons/start.png")
         self._resume_button = self._make_tool_button("Resume", ":/icons/resume.png")
