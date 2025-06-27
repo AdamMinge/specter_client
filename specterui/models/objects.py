@@ -277,10 +277,7 @@ class GRPCObjectsModel(ObjectsModel):
             return
 
         old_parent_index = self.parent(index)
-        assert old_parent_index.isValid()
-
         new_parent_index = self.findItem(parent)
-        assert new_parent_index.isValid()
 
         self.takeItem(object, old_parent_index)
         self.createItem(object, new_parent_index)

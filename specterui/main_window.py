@@ -135,7 +135,7 @@ class RecorderDock(QDockWidget):
         self._client = client
         self._init_ui()
         self._init_connection()
-        self._on_selection_changed()
+        self._update_buttons()
 
     def _init_ui(self):
         self._model = ConsoleModel()
@@ -179,7 +179,7 @@ class RecorderDock(QDockWidget):
         self._pause_button.clicked.connect(self._on_pause_recording)
         self._stop_button.clicked.connect(self._on_stop_recording)
 
-        self._view.ui.fileSelectionTableView.selectionModel().selectionChanged.connect(self._on_selection_changed)
+        self._view.ui.fileSelectionTableView.selectionModel().selectionChanged.connect(self._update_buttons)
 
     def _on_start_recording(self):
         console_item = GRPCRecorderConsoleItem("Recording", self._client)
@@ -189,16 +189,18 @@ class RecorderDock(QDockWidget):
     def _on_resume_recording(self):
         console_item = self._get_current_console_item()
         console_item.start()
+        self._update_buttons()
 
     def _on_pause_recording(self):
         console_item = self._get_current_console_item()
         console_item.stop()
+        self._update_buttons()
 
     def _on_stop_recording(self):
         index = self._view.ui.fileSelectionTableView.selectionModel().currentIndex()
         self._view.delete_file_selector_at_index(index)
 
-    def _on_selection_changed(self):
+    def _update_buttons(self):
         console_item = self._get_current_console_item()
 
         self._new_button.setEnabled(True)
