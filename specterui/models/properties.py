@@ -1,17 +1,13 @@
+import grpc
 import typing
 import dataclasses
 
-from PySide6.QtCore import (
-    Qt,
-    QMetaObject,
-    Slot,
-    Q_ARG,
-    QModelIndex
-)
+from PySide6.QtCore import Qt, QMetaObject, Slot, Q_ARG, QModelIndex
 from pyside6_utils.models import DataclassModel
 
 from specterui.proto.specter_pb2 import Object, PropertyUpdate
 from specterui.client import Client, StreamReader, convert_to_value, convert_from_value
+
 
 class ObservableDict(dict):
     def __init__(self, *args, on_change=None, skip_set=True, **kwargs):
@@ -33,7 +29,7 @@ class ObservableDict(dict):
 
 
 class GRPCPropertiesModel(DataclassModel):
-    EmptyDataclass = dataclasses.make_dataclass('EmptyDataclass', [])
+    EmptyDataclass = dataclasses.make_dataclass("EmptyDataclass", [])
 
     def __init__(self, client: Client, parent=None):
         super().__init__(GRPCPropertiesModel.EmptyDataclass(), parent)
@@ -42,51 +38,71 @@ class GRPCPropertiesModel(DataclassModel):
         self._stream_reader = None
         self.set_object(None)
 
-    def fetch_initial_state(self):
+    def fetch_initial_state(self) -> bool:
         if self._object is None:
             self.set_dataclass_instance(GRPCPropertiesModel.EmptyDataclass())
-            return
+            return False
 
-        response = self._client.object_stub.GetProperties(Object(query=self._object))
-
-        fields = []
-        values = {}
-
-        for prop in response.properties:
-            base_path = prop.property
-            base_value = convert_from_value(prop.value)
-            editable = not prop.read_only
-
-            if base_value is None:
-                continue
-
-            self.flatten_dict_field(
-                fields,
-                values,
-                base_value,
-                base_path,
-                field_prefix=base_path,
-                editable=editable
+        try:
+            response = self._client.object_stub.GetProperties(
+                Object(query=self._object)
             )
 
-        dataclass_instance = self.create_properties_dataclass(fields, values)
-        self.set_dataclass_instance(dataclass_instance)
+            fields = []
+            values = {}
 
-    def create_properties_dataclass(self, fields: list[typing.Any], values: dict[typing.Any]):
+            for prop in response.properties:
+                base_path = prop.property
+                base_value = convert_from_value(prop.value)
+                editable = not prop.read_only
+
+                if base_value is None:
+                    continue
+
+                self.flatten_dict_field(
+                    fields,
+                    values,
+                    base_value,
+                    base_path,
+                    field_prefix=base_path,
+                    editable=editable,
+                )
+
+            dataclass_instance = self.create_properties_dataclass(fields, values)
+            self.set_dataclass_instance(dataclass_instance)
+            return True
+
+        except Exception:
+            self.set_dataclass_instance(GRPCPropertiesModel.EmptyDataclass())
+            return False
+
+    def create_properties_dataclass(
+        self, fields: list[typing.Any], values: dict[typing.Any]
+    ):
         DynamicPropertiesDataclass = dataclasses.make_dataclass(
             "DynamicProperties", fields
         )
 
         dataclass_instance = DynamicPropertiesDataclass(**values)
 
-        observed_dict = ObservableDict(dataclass_instance.__dict__, on_change=self.change_property)
-        object.__setattr__(dataclass_instance, '__dict__', observed_dict)
+        observed_dict = ObservableDict(
+            dataclass_instance.__dict__, on_change=self.change_property
+        )
+        object.__setattr__(dataclass_instance, "__dict__", observed_dict)
 
         return dataclass_instance
-    
-    def flatten_dict_field(self, fields: list, values: dict, current_value: typing.Any, full_path: str, field_prefix: str, editable: bool):
-        display_path = '/'.join(full_path.split('/')[:-1])
-        display_name = field_prefix.split('_')[-1]
+
+    def flatten_dict_field(
+        self,
+        fields: list,
+        values: dict,
+        current_value: typing.Any,
+        full_path: str,
+        field_prefix: str,
+        editable: bool,
+    ):
+        display_path = "/".join(full_path.split("/")[:-1])
+        display_name = field_prefix.split("_")[-1]
 
         metadata = {
             "editable": editable,
@@ -99,49 +115,71 @@ class GRPCPropertiesModel(DataclassModel):
             for key, sub_value in current_value.items():
                 sub_prefix = f"{field_prefix}_{key}" if field_prefix else key
                 sub_path = f"{full_path}/{key}" if full_path else key
-                self.flatten_dict_field(fields, values, sub_value, sub_path, sub_prefix, editable)
+                self.flatten_dict_field(
+                    fields, values, sub_value, sub_path, sub_prefix, editable
+                )
         elif isinstance(current_value, (list, set)):
             fields.append(
-                (field_prefix, type(current_value), dataclasses.field(default_factory=lambda: current_value, metadata=metadata))
+                (
+                    field_prefix,
+                    type(current_value),
+                    dataclasses.field(
+                        default_factory=lambda: current_value, metadata=metadata
+                    ),
+                )
             )
             values[field_prefix] = current_value
         else:
             fields.append(
-                (field_prefix, type(current_value), dataclasses.field(default=current_value, metadata=metadata))
+                (
+                    field_prefix,
+                    type(current_value),
+                    dataclasses.field(default=current_value, metadata=metadata),
+                )
             )
             values[field_prefix] = current_value
-    
-    def change_property(self, field_name: str, old_value: typing.Any, new_value: typing.Any):
+
+    def change_property(
+        self, field_name: str, old_value: typing.Any, new_value: typing.Any
+    ):
         instance = self.get_dataclass()
-        observed_dict: ObservableDict = getattr(instance, '__dict__')
-        root_field = field_name.split('_', 1)[0]
+        observed_dict: ObservableDict = getattr(instance, "__dict__")
+        root_field = field_name.split("_", 1)[0]
 
         if field_name == root_field:
             value_to_send = self.build_root_value(new_value)
         else:
-            value_to_send = self.build_nested_value(field_name, root_field, new_value, observed_dict)
+            value_to_send = self.build_nested_value(
+                field_name, root_field, new_value, observed_dict
+            )
 
         self._client.object_stub.UpdateProperty(
             PropertyUpdate(
                 object=Object(query=self._object),
                 property=root_field,
-                value=convert_to_value(value_to_send)
+                value=convert_to_value(value_to_send),
             )
         )
 
     def build_root_value(self, value: typing.Any) -> typing.Any:
         return value
 
-    def build_nested_value(self, field_name: str, root_field: str, new_value: typing.Any, observed_dict: dict) -> dict:
+    def build_nested_value(
+        self,
+        field_name: str,
+        root_field: str,
+        new_value: typing.Any,
+        observed_dict: dict,
+    ) -> dict:
         nested_items = {
-            k[len(root_field) + 1:]: (new_value if k == field_name else v)
+            k[len(root_field) + 1 :]: (new_value if k == field_name else v)
             for k, v in observed_dict.items()
             if k.startswith(f"{root_field}_")
         }
 
         merged = {}
         for key, val in nested_items.items():
-            keys = key.split('_') if key else []
+            keys = key.split("_") if key else []
             sub_tree = self.nest_keys(keys, val)
             self.deep_merge(merged, sub_tree)
 
@@ -196,7 +234,7 @@ class GRPCPropertiesModel(DataclassModel):
     @Slot(str, "QVariant", "QVariant")
     def handle_property_updated(self, property, old_value, new_value):
         instance = self.get_dataclass()
-        observed_dict: ObservableDict = getattr(instance, '__dict__')
+        observed_dict: ObservableDict = getattr(instance, "__dict__")
         updated_value = convert_from_value(new_value)
 
         def flatten(prefix: str, value):
@@ -215,7 +253,10 @@ class GRPCPropertiesModel(DataclassModel):
             if k in observed_dict:
                 index = self.find_index(k)
                 observed_dict._super_setitem(k, v)
-                self.dataChanged.emit(self.index(index.row(), 0, index.parent()), self.index(index.row(), 1, index.parent()))
+                self.dataChanged.emit(
+                    self.index(index.row(), 0, index.parent()),
+                    self.index(index.row(), 1, index.parent()),
+                )
 
     def set_object(self, query: typing.Optional[str]):
         self._object = query
@@ -226,13 +267,17 @@ class GRPCPropertiesModel(DataclassModel):
 
         if self._object is not None:
             self._stream_reader = StreamReader(
-                stream=self._client.object_stub.ListenPropertiesChanges(Object(query=self._object)),
-                on_data=self.handle_properties_changes
+                stream=self._client.object_stub.ListenPropertiesChanges(
+                    Object(query=self._object)
+                ),
+                on_data=self.handle_properties_changes,
             )
         else:
             self._stream_reader = None
-    
-    def find_index(self, property_name: str, parent: QModelIndex = QModelIndex()) -> QModelIndex | None:
+
+    def find_index(
+        self, property_name: str, parent: QModelIndex = QModelIndex()
+    ) -> QModelIndex | None:
         for row in range(self.rowCount(parent)):
             index = self.index(row, 0, parent)
             if not index.isValid():

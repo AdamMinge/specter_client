@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
     QTreeView,
     QHeaderView,
     QToolButton,
-    QHBoxLayout
+    QHBoxLayout,
 )
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtCore import Signal, Qt, QModelIndex
@@ -19,7 +19,11 @@ from pyside6_utils.widgets import DataClassTreeView, ConsoleWidget
 from pyside6_utils.models.console_widget_models.console_model import ConsoleModel
 
 from specterui.client import Client
-from specterui.models import GRPCObjectsModel, GRPCPropertiesModel, GRPCRecorderConsoleItem
+from specterui.models import (
+    GRPCObjectsModel,
+    GRPCPropertiesModel,
+    GRPCRecorderConsoleItem,
+)
 
 
 class ObjectsDock(QDockWidget):
@@ -58,20 +62,26 @@ class ObjectsDock(QDockWidget):
 
         self.selected_object.emit(query)
 
-    def _on_data_changed(self, topLeft: QModelIndex, bottomRight: QModelIndex, roles=None):
+    def _on_data_changed(
+        self, topLeft: QModelIndex, bottomRight: QModelIndex, roles=None
+    ):
         current_index = self._view.currentIndex()
 
         if not current_index.isValid():
             return
-        
+
         if current_index.parent() != topLeft.parent():
             return
 
-        if (topLeft.row() <= current_index.row() <= bottomRight.row() and
-            topLeft.column() <= current_index.column() <= bottomRight.column()):
+        if (
+            topLeft.row() <= current_index.row() <= bottomRight.row()
+            and topLeft.column() <= current_index.column() <= bottomRight.column()
+        ):
 
             query = self._model.data(
-                current_index.sibling(current_index.row(), GRPCObjectsModel.Columns.Query),
+                current_index.sibling(
+                    current_index.row(), GRPCObjectsModel.Columns.Query
+                ),
                 Qt.ItemDataRole.UserRole,
             )
 
@@ -112,9 +122,9 @@ class MethodsDock(QDockWidget):
         self._init_ui()
 
     def _init_ui(self):
-        #self._model = GRPCMethodsModel(self._client)
+        # self._model = GRPCMethodsModel(self._client)
         self._view = QTableView()
-        #self._view.setModel(self._model)
+        # self._view.setModel(self._model)
         self._view.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
         self._view.setAlternatingRowColors(True)
         self._view.horizontalHeader().setHidden(True)
@@ -139,7 +149,9 @@ class RecorderDock(QDockWidget):
 
     def _init_ui(self):
         self._model = ConsoleModel()
-        self._view = ConsoleWidget(ui_text_min_update_interval=0.1, display_max_blocks=5000)
+        self._view = ConsoleWidget(
+            ui_text_min_update_interval=0.1, display_max_blocks=5000
+        )
         self._view.set_model(self._model)
         self._view.set_console_width_percentage(80)
 
@@ -180,7 +192,9 @@ class RecorderDock(QDockWidget):
         self._pause_button.clicked.connect(self._on_pause_recording)
         self._stop_button.clicked.connect(self._on_stop_recording)
 
-        self._view.ui.fileSelectionTableView.selectionModel().selectionChanged.connect(self._update_buttons)
+        self._view.ui.fileSelectionTableView.selectionModel().selectionChanged.connect(
+            self._update_buttons
+        )
 
     def _on_start_recording(self):
         console_item = GRPCRecorderConsoleItem("Recording", self._client)
@@ -205,13 +219,19 @@ class RecorderDock(QDockWidget):
         console_item = self._get_current_console_item()
 
         self._new_button.setEnabled(True)
-        self._resume_button.setEnabled(not console_item.is_running() if console_item else False)
-        self._pause_button.setEnabled(console_item.is_running() if console_item else False)
+        self._resume_button.setEnabled(
+            not console_item.is_running() if console_item else False
+        )
+        self._pause_button.setEnabled(
+            console_item.is_running() if console_item else False
+        )
         self._stop_button.setEnabled(console_item is not None)
 
     def _get_current_console_item(self) -> GRPCRecorderConsoleItem:
         index = self._view.ui.fileSelectionTableView.selectionModel().currentIndex()
-        console_item = self._view._files_proxy_model.data(index, role = Qt.ItemDataRole.UserRole + 1)
+        console_item = self._view._files_proxy_model.data(
+            index, role=Qt.ItemDataRole.UserRole + 1
+        )
         return console_item
 
 

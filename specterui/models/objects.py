@@ -34,24 +34,86 @@ class ObjectNode:
         raise NotImplemented
 
     def child(self, row: int) -> typing.Optional["ObjectNode"]:
-        return self.children[row] if row < len(self.children) else None
+        return self.children[row] if 0 <= row < len(self.children) else None
 
     def row(self) -> int:
-        if self.parent:
-            return self.parent.children.index(self)
-        return 0
+        return self.parent.children.index(self) if self.parent else 0
 
     @property
-    def name(self) -> str:
-        return json.loads(self.query)["path"].split(".")[-1]
+    def query(self) -> str:
+        return self._query
 
-    @property
-    def path(self) -> str:
-        return json.loads(self.query)["path"]
+    @query.setter
+    def query(self, query: str) -> str:
+        parsed_query = json.loads(query)
+        self._query = query
+        self.name = parsed_query["path"].split(".")[-1]
+        self.path = parsed_query["path"]
+        self.type = parsed_query["type"]
 
-    @property
-    def type(self) -> str:
-        return json.loads(self.query)["type"]
+
+class ObjectsTree:
+    def __init__(self):
+        self._objects = []
+        self._query_cache = {}
+
+    def add_root_object(self, node: ObjectNode):
+        self._objects.append(node)
+        self._update_cache(node)
+
+    def remove_root_object(self, index: int) -> ObjectNode:
+        node = self._objects.pop(index)
+        self._remove_from_cache(node)
+        return node
+
+    def root_objects(self) -> list[ObjectNode]:
+        return self._objects
+
+    def root_count(self) -> int:
+        return len(self._objects)
+
+    def _update_cache(self, node: ObjectNode):
+        self._query_cache[node.query] = node
+        for child in node.children:
+            self._update_cache(child)
+
+    def _remove_from_cache(self, node: ObjectNode):
+        if node.query in self._query_cache:
+            del self._query_cache[node.query]
+        for child in node.children:
+            self._remove_from_cache(child)
+
+    def find_by_query(self, query: str) -> typing.Optional[ObjectNode]:
+        return self._query_cache.get(query)
+
+    def add_child(self, parent_node: ObjectNode, child_node: ObjectNode):
+        child_node.parent = parent_node
+        parent_node.children.append(child_node)
+        self._update_cache(child_node)
+
+    def remove_child(self, parent_node: ObjectNode, index: int) -> ObjectNode:
+        node = parent_node.children.pop(index)
+        self._remove_from_cache(node)
+        return node
+
+    def update_node(self, node: ObjectNode, new_query: str):
+        old_query = node.query
+        if old_query in self._query_cache:
+            del self._query_cache[old_query]
+        node.query = new_query
+        self._query_cache[new_query] = node
+
+    def add_subtree(
+        self, node: ObjectNode, parent_node: typing.Optional[ObjectNode] = None
+    ):
+        if parent_node:
+            self.add_child(parent_node, node)
+        else:
+            self.add_root_object(node)
+
+        for child in node.children:
+            child.parent = node
+            self._update_cache(child)
 
 
 class ObjectsModel(QAbstractItemModel):
@@ -63,14 +125,13 @@ class ObjectsModel(QAbstractItemModel):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._objects = []
+        self._tree = ObjectsTree()
 
     def rowCount(self, parent=QModelIndex()) -> int:
         if parent.isValid():
             parent_node = parent.internalPointer()
             return len(parent_node.children)
-
-        return len(self._objects)
+        return self._tree.root_count()
 
     def columnCount(self, parent=QModelIndex()) -> int:
         return len(ObjectsModel.Columns)
@@ -115,7 +176,7 @@ class ObjectsModel(QAbstractItemModel):
         child_node = (
             parent.internalPointer().child(row)
             if parent.isValid()
-            else self._objects[row]
+            else self._tree.root_objects()[row]
         )
 
         if child_node:
@@ -130,7 +191,7 @@ class ObjectsModel(QAbstractItemModel):
         child_node = index.internalPointer()
         parent_node = child_node.parent
 
-        if child_node in self._objects or parent_node is None:
+        if parent_node is None:
             return QModelIndex()
 
         return self.createIndex(parent_node.row(), 0, parent_node)
@@ -138,44 +199,52 @@ class ObjectsModel(QAbstractItemModel):
     def findItem(
         self, query: str, parent=QModelIndex(), recursive: bool = True
     ) -> QModelIndex:
-        for row in range(self.rowCount(parent)):
-            child_index = self.index(row, 0, parent)
-            child_node = child_index.internalPointer()
-            if child_node == query:
-                return child_index
-
-            found_index = self.findItem(query, child_index, recursive)
-            if found_index.isValid():
-                return found_index
-
+        node = self._tree.find_by_query(query)
+        if node:
+            return self.createIndex(node.row(), 0, node)
         return QModelIndex()
 
     @Slot(str, QModelIndex)
     def createItem(self, query: str, parent_index=QModelIndex()) -> QModelIndex:
         parent_node = parent_index.internalPointer() if parent_index.isValid() else None
-        node_container = parent_node.children if parent_node else self._objects
         new_node = ObjectNode(query, parent_node)
         row_count = self.rowCount(parent_index)
 
         self.beginInsertRows(parent_index, row_count, row_count)
-        node_container.append(new_node)
+        if parent_node:
+            self._tree.add_child(parent_node, new_node)
+        else:
+            self._tree.add_root_object(new_node)
         self.endInsertRows()
 
         return self.createIndex(new_node.row(), 0, new_node)
 
     @Slot(str, QModelIndex)
+    def addItem(self, node: ObjectNode, parent_index=QModelIndex()) -> QModelIndex:
+        parent_node = parent_index.internalPointer() if parent_index.isValid() else None
+        row_count = self.rowCount(parent_index)
+
+        self.beginInsertRows(parent_index, row_count, row_count)
+        self._tree.add_subtree(node, parent_node)
+        self.endInsertRows()
+
+        return self.createIndex(node.row(), 0, node)
+
+    @Slot(str, QModelIndex)
     def takeItem(
         self, query: str, parent_index=QModelIndex()
-    ) -> typing.Optional["ObjectNode"]:
+    ) -> typing.Optional[ObjectNode]:
         parent_node = parent_index.internalPointer() if parent_index.isValid() else None
-        node_container = parent_node.children if parent_node else self._objects
         find_index = self.findItem(query, parent_index, recursive=False)
 
         if not find_index.isValid():
             return None
 
         self.beginRemoveRows(parent_index, find_index.row(), find_index.row())
-        node = node_container.pop(find_index.row())
+        if parent_node:
+            node = self._tree.remove_child(parent_node, find_index.row())
+        else:
+            node = self._tree.remove_root_object(find_index.row())
         self.endRemoveRows()
 
         return node
@@ -184,22 +253,19 @@ class ObjectsModel(QAbstractItemModel):
     def updateItem(
         self, old_query: str, new_query: str, parent_index=QModelIndex()
     ) -> QModelIndex:
-        find_index = self.findItem(old_query, parent_index, recursive=False)
-
-        if not find_index.isValid():
+        node = self._tree.find_by_query(old_query)
+        if not node:
             return QModelIndex()
 
-        node = find_index.internalPointer()
-        assert node
+        self._tree.update_node(node, new_query)
 
-        node.query = new_query
-
+        index = self.createIndex(node.row(), 0, node)
         self.dataChanged.emit(
-            find_index.sibling(find_index.row(), ObjectsModel.Columns.Name),
-            find_index.sibling(find_index.row(), ObjectsModel.Columns.Path),
+            index.sibling(index.row(), ObjectsModel.Columns.Name),
+            index.sibling(index.row(), ObjectsModel.Columns.Path),
             [Qt.ItemDataRole.DisplayRole],
         )
-        return find_index
+        return index
 
 
 class GRPCObjectsModel(ObjectsModel):
@@ -211,7 +277,7 @@ class GRPCObjectsModel(ObjectsModel):
 
         self._stream_reader = StreamReader(
             stream=self._client.object_stub.ListenTreeChanges(empty_pb2.Empty()),
-            on_data=self.handle_tree_changes
+            on_data=self.handle_tree_changes,
         )
 
     def fetch_initial_state(self):
@@ -279,8 +345,8 @@ class GRPCObjectsModel(ObjectsModel):
         old_parent_index = self.parent(index)
         new_parent_index = self.findItem(parent)
 
-        self.takeItem(object, old_parent_index)
-        self.createItem(object, new_parent_index)
+        node = self.takeItem(object, old_parent_index)
+        self.addItem(node, new_parent_index)
 
     @Slot(str, str)
     def handle_object_renamed(self, old_object, new_object):

@@ -77,4 +77,4 @@ def attach_to_new_process(
             )
         pid = child_pid
 
-    return attach_to_existing_process(host, port, process.pid, library)
+    return attach_to_existing_process(host, port, pid, library)
