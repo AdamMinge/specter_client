@@ -19,9 +19,11 @@ from pyside6_utils.widgets import DataClassTreeView, ConsoleWidget
 from pyside6_utils.models.console_widget_models.console_model import ConsoleModel
 
 from specterui.client import Client
+
 from specterui.models import (
     GRPCObjectsModel,
     GRPCPropertiesModel,
+    FilteredPropertiesProxyModel,
     GRPCRecorderConsoleItem,
 )
 
@@ -96,8 +98,10 @@ class PropertiesDock(QDockWidget):
 
     def _init_ui(self):
         self._model = GRPCPropertiesModel(self._client)
+        self._proxy_model = FilteredPropertiesProxyModel()
+        self._proxy_model.setSourceModel(self._model)
         self._view = DataClassTreeView()
-        self._view.setModel(self._model)
+        self._view.setModel(self._proxy_model)
         self._view.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
         self._view.setAlternatingRowColors(True)
         self._view.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
@@ -112,7 +116,9 @@ class PropertiesDock(QDockWidget):
         self.setWidget(container)
 
     def set_object(self, query: typing.Optional[str]):
+        self._proxy_model.setSourceModel(None)
         self._model.set_object(query)
+        self._proxy_model.setSourceModel(self._model)
 
 
 class MethodsDock(QDockWidget):

@@ -1,8 +1,16 @@
-import grpc
 import typing
 import dataclasses
 
-from PySide6.QtCore import Qt, QMetaObject, Slot, Q_ARG, QModelIndex
+
+from PySide6.QtCore import (
+    Qt,
+    QMetaObject,
+    Slot,
+    Q_ARG,
+    QModelIndex,
+    QSortFilterProxyModel,
+)
+
 from pyside6_utils.models import DataclassModel
 
 from specterui.proto.specter_pb2 import Object, PropertyUpdate
@@ -293,3 +301,14 @@ class GRPCPropertiesModel(DataclassModel):
                 return child_index
 
         return None
+
+
+class FilteredPropertiesProxyModel(QSortFilterProxyModel):
+    def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
+        source_model = self.sourceModel()
+        index = source_model.index(source_row, 0, source_parent)
+        if not index.isValid():
+            return True
+
+        field_name = index.data(DataclassModel.CustomDataRoles.AttributeNameRole)
+        return not (isinstance(field_name, str) and field_name.endswith("type"))
