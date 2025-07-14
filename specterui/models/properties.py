@@ -6,7 +6,8 @@ from PySide6.QtCore import (
     QMetaObject,
     Slot,
     Q_ARG,
-    QModelIndex
+    QModelIndex,
+    QSortFilterProxyModel
 )
 from pyside6_utils.models import DataclassModel
 
@@ -248,3 +249,13 @@ class GRPCPropertiesModel(DataclassModel):
                 return child_index
 
         return None
+
+class FilteredPropertiesProxyModel(QSortFilterProxyModel):
+    def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
+        source_model = self.sourceModel()
+        index = source_model.index(source_row, 0, source_parent)
+        if not index.isValid():
+            return True
+
+        field_name = index.data(DataclassModel.CustomDataRoles.AttributeNameRole)
+        return not (isinstance(field_name, str) and field_name.endswith("type"))
