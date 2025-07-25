@@ -87,6 +87,8 @@ class ObjectsModel(QAbstractItemModel):
                     return node.type
                 case ObjectsModel.Columns.Path:
                     return node.path
+                case ObjectsModel.Columns.Query:
+                    return node.query
         elif role == Qt.ItemDataRole.UserRole:
             match index.column():
                 case ObjectsModel.Columns.Query:
@@ -106,6 +108,8 @@ class ObjectsModel(QAbstractItemModel):
                     return "Type"
                 case ObjectsModel.Columns.Path:
                     return "Path"
+                case ObjectsModel.Columns.Query:
+                    return "Query"
 
     def index(self, row, column, parent=QModelIndex()) -> QModelIndex:
         if not self.hasIndex(row, column, parent):
@@ -196,9 +200,7 @@ class ObjectsModel(QAbstractItemModel):
             parent_index.internalPointer() if parent_index.isValid() else self._root
         )
         find_index = self.findItem(query, parent_index, recursive=False)
-
-        if not find_index.isValid():
-            return None
+        assert find_index.isValid()
 
         row_index = find_index.row()
         self.beginRemoveRows(parent_index, row_index, row_index)
@@ -209,22 +211,20 @@ class ObjectsModel(QAbstractItemModel):
         return node
 
     @Slot(str, QModelIndex)
-    def updateItem(
-        self, old_query: str, new_query: str, parent_index=QModelIndex()
-    ) -> QModelIndex:
+    def updateItem(self, old_query: str, new_query: str) -> QModelIndex:
         node = self._query_cache.get(old_query)
-        if not node:
-            return QModelIndex()
+        assert node
 
         if old_query in self._query_cache:
             del self._query_cache[old_query]
+
         node.query = new_query
         self._query_cache[new_query] = node
 
         index = self.createIndex(node.row(), 0, node)
         self.dataChanged.emit(
             index.sibling(index.row(), ObjectsModel.Columns.Name),
-            index.sibling(index.row(), ObjectsModel.Columns.Path),
+            index.sibling(index.row(), ObjectsModel.Columns.Query),
             [Qt.ItemDataRole.DisplayRole],
         )
         return index
@@ -239,16 +239,6 @@ class GRPCObjectsModel(ObjectsModel):
             stream=self._client.object_stub.ListenTreeChanges(empty_pb2.Empty()),
             on_data=self.handle_tree_changes,
         )
-        self.fetch_initial_state()
-
-    def fetch_initial_state(self):
-        response = self._client.object_stub.GetTree(OptionalObject())
-        self.build_tree(response.nodes)
-
-    def build_tree(self, object_nodes, parent_index=QModelIndex()):
-        for object_node in object_nodes:
-            node_index = self.createItem(object_node.object.query, parent_index)
-            self.build_tree(object_node.nodes, node_index)
 
     def handle_tree_changes(self, change):
         if change.HasField("added"):
@@ -291,8 +281,7 @@ class GRPCObjectsModel(ObjectsModel):
     @Slot(str)
     def handle_object_removed(self, object):
         index = self.findItem(object)
-        if not index.isValid():
-            return
+        assert index.isValid()
 
         parent_index = self.parent(index)
         self.takeItem(object, parent_index)
@@ -300,8 +289,7 @@ class GRPCObjectsModel(ObjectsModel):
     @Slot(str, str)
     def handle_object_reparented(self, object, parent):
         index = self.findItem(object)
-        if not index.isValid():
-            return
+        assert index.isValid()
 
         old_parent_index = self.parent(index)
         node = self.takeItem(object, old_parent_index)
@@ -311,9 +299,4 @@ class GRPCObjectsModel(ObjectsModel):
 
     @Slot(str, str)
     def handle_object_renamed(self, old_object, new_object):
-        index = self.findItem(old_object)
-        if not index.isValid():
-            return
-
-        parent_index = self.parent(index)
-        self.updateItem(old_object, new_object, parent_index)
+        self.updateItem(old_object, new_object)
