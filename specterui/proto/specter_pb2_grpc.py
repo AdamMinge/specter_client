@@ -26,6 +26,84 @@ if _version_not_supported:
     )
 
 
+class PreviewerServiceStub(object):
+    """-------------------------------- Previewer ------------------------------- //
+
+    """
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.ListenPreview = channel.unary_stream(
+                '/specter_proto.PreviewerService/ListenPreview',
+                request_serializer=specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
+                response_deserializer=specterui_dot_proto_dot_specter__pb2.PreviewImage.FromString,
+                _registered_method=True)
+
+
+class PreviewerServiceServicer(object):
+    """-------------------------------- Previewer ------------------------------- //
+
+    """
+
+    def ListenPreview(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_PreviewerServiceServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'ListenPreview': grpc.unary_stream_rpc_method_handler(
+                    servicer.ListenPreview,
+                    request_deserializer=specterui_dot_proto_dot_specter__pb2.Object.FromString,
+                    response_serializer=specterui_dot_proto_dot_specter__pb2.PreviewImage.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'specter_proto.PreviewerService', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers('specter_proto.PreviewerService', rpc_method_handlers)
+
+
+ # This class is part of an EXPERIMENTAL API.
+class PreviewerService(object):
+    """-------------------------------- Previewer ------------------------------- //
+
+    """
+
+    @staticmethod
+    def ListenPreview(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(
+            request,
+            target,
+            '/specter_proto.PreviewerService/ListenPreview',
+            specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
+            specterui_dot_proto_dot_specter__pb2.PreviewImage.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+
 class MarkerServiceStub(object):
     """--------------------------------- Marker --------------------------------- //
 

@@ -5,6 +5,16 @@ import "google/protobuf/struct.proto";
 
 package specter_proto;
 
+// -------------------------------- Previewer ------------------------------- //
+
+service PreviewerService {
+    rpc ListenPreview (Object) returns (stream PreviewImage) {}
+}
+
+message PreviewImage {
+    bytes image = 1;
+}
+
 // --------------------------------- Marker --------------------------------- //
 
 service MarkerService {

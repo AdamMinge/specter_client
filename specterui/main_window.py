@@ -11,14 +11,16 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QToolButton,
     QHBoxLayout,
+    QLabel,
 )
 from PySide6.QtGui import QIcon, QPixmap
-from PySide6.QtCore import Signal, Qt, QModelIndex
+from PySide6.QtCore import Signal, Qt, QModelIndex, QByteArray
 
 from pyside6_utils.widgets import DataClassTreeView, ConsoleWidget
 from pyside6_utils.models.console_widget_models.console_model import ConsoleModel
 
-from specterui.client import Client
+from specterui.proto.specter_pb2 import Object
+from specterui.client import Client, StreamReader
 
 from specterui.models import (
     GRPCObjectsModel,
@@ -247,8 +249,79 @@ class TerminalDock(QDockWidget):
 
 
 class ViewerWidget(QWidget):
-    def __init__(self):
+    def __init__(self, client: Client):
         super().__init__()
+        self._client = client
+        self._stream_reader = None
+        self._current_pixmap = QPixmap()
+        self._init_ui()
+        self.set_object(None)
+
+    def _init_ui(self):
+        self.layout = QVBoxLayout()
+
+        self._image_label = QLabel("No image loaded")
+        self._image_label.setAlignment(Qt.AlignCenter)
+        self._image_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.layout.addWidget(self._image_label)
+
+        self.setLayout(self.layout)
+
+    def set_object(self, query: typing.Optional[str]):
+        self._object = query
+
+        if self._stream_reader:
+            self._stream_reader.stop()
+
+        if self._object is not None:
+            self._stream_reader = StreamReader(
+                stream=self._client.preview_stub.ListenPreview(
+                    Object(query=self._object)
+                ),
+                on_data=self.display_image,
+            )
+        else:
+            self._stream_reader = None
+
+    def display_image(self, preview_message):
+        if not hasattr(preview_message, "image") or not preview_message.image:
+            self._image_label.setText("No image data received.")
+            self._image_label.setPixmap(QPixmap())
+            self._current_pixmap = QPixmap()
+            return
+
+        image_bytes = preview_message.image
+
+        q_byte_array = QByteArray(image_bytes)
+
+        new_pixmap = QPixmap()
+        if new_pixmap.loadFromData(q_byte_array):
+            self._current_pixmap = new_pixmap
+            self._scale_and_set_pixmap()
+        else:
+            self._image_label.setText("Failed to load image from bytes.")
+            self._image_label.setPixmap(QPixmap())
+            self._current_pixmap = QPixmap()
+
+    def _scale_and_set_pixmap(self):
+        if self._current_pixmap.isNull():
+            return
+
+        label_size = self._image_label.size()
+        if label_size.isEmpty():
+            self._image_label.setPixmap(self._current_pixmap)
+            self._image_label.setText("")
+            return
+
+        scaled_pixmap = self._current_pixmap.scaled(
+            label_size, Qt.KeepAspectRatio, Qt.SmoothTransformation
+        )
+        self._image_label.setPixmap(scaled_pixmap)
+        self._image_label.setText("")
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._scale_and_set_pixmap()
 
 
 class MainWindow(QMainWindow):
@@ -268,8 +341,9 @@ class MainWindow(QMainWindow):
         self._methods_dock = MethodsDock(self._client)
         self._terminal_dock = TerminalDock()
         self._recorder_dock = RecorderDock(self._client)
+        self._viewer_widget = ViewerWidget(self._client)
 
-        self.setCentralWidget(ViewerWidget())
+        self.setCentralWidget(self._viewer_widget)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self._objects_dock)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self._properties_dock)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self._methods_dock)
@@ -281,3 +355,4 @@ class MainWindow(QMainWindow):
     def _init_connnection(self):
         self._objects_dock.selected_object.connect(self._properties_dock.set_object)
         self._objects_dock.selected_object.connect(self._methods_dock.set_object)
+        self._objects_dock.selected_object.connect(self._viewer_widget.set_object)

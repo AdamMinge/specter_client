@@ -9,6 +9,7 @@ from specterui.proto.specter_pb2_grpc import (
     RecorderServiceStub,
     MarkerServiceStub,
     ObjectServiceStub,
+    PreviewerServiceStub,
 )
 
 
@@ -35,6 +36,7 @@ class Client(QObject):
         self.recorder_stub = RecorderServiceStub(self._channel)
         self.marker_stub = MarkerServiceStub(self._channel)
         self.object_stub = ObjectServiceStub(self._channel)
+        self.preview_stub = PreviewerServiceStub(self._channel)
 
     def close(self):
         self._channel.close()
