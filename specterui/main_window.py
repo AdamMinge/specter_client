@@ -13,6 +13,7 @@ from specterui.widgets import (
     RecorderDock,
     TerminalDock,
     ViewerWidget,
+    ToolBar,
 )
 
 
@@ -43,6 +44,9 @@ class MainWindow(QMainWindow):
         self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._recorder_dock)
 
         self.tabifyDockWidget(self._terminal_dock, self._recorder_dock)
+
+        self._toolbar = ToolBar(self._client)
+        self.addToolBar(self._toolbar)
 
     def _init_connnection(self):
         self._objects_dock.selected_object.connect(self._properties_dock.set_object)

@@ -7,5 +7,6 @@
     <file>icons/resume.png</file>
     <file>icons/pause.png</file>
     <file>icons/stop.png</file>
+    <file>icons/select.png</file>
 </qresource>
 </RCC>
