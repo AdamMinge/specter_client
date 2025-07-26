@@ -7,7 +7,6 @@ from specterui.models.recorder import GRPCRecorderConsoleItem
 from specterui.models.methods import (
     GRPCMethodsModel,
     MethodListModel,
-    MethodListDelegate,
     MethodTreeItem,
     DataclassTreeItem,
     BaseTreeItem,
@@ -21,7 +20,6 @@ __all__ = [
     "GRPCRecorderConsoleItem",
     "GRPCMethodsModel",
     "MethodListModel",
-    "MethodListDelegate",
     "MethodTreeItem",
     "DataclassTreeItem",
     "BaseTreeItem",

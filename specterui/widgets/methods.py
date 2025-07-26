@@ -14,9 +14,9 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, SignalInstance, QModelIndex, QAbstractItemModel, QPoint
 
 from specterui.client import Client
+from specterui.delegates import MethodListDelegate
 from specterui.models import (
     MethodListModel,
-    MethodListDelegate,
     DataclassTreeItem,
     HasNoDefaultError,
     GRPCMethodsModel,
