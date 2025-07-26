@@ -12,9 +12,12 @@ from PySide6.QtCore import (
     Signal,
     QObject,
     QPersistentModelIndex,
+    QSortFilterProxyModel,
 )
 
-from specterui.client import Client
+from specterui.proto.specter_pb2 import Object, Method
+from specterui.client import Client, convert_to_value, convert_from_value
+from specterui.models.utils import flatten_dict_field, create_properties_dataclass
 
 
 class BaseTreeItem:
@@ -241,25 +244,29 @@ class MethodListModel(QAbstractItemModel):
         assert isinstance(item, BaseTreeItem)
 
         if isinstance(item, MethodTreeItem):
-            if index.column() == 0:
-                return item.name
-            elif index.column() == 1:
-                if role == MethodListModel.CustomDataRoles.ButtonRole:
-                    return True
-                elif role == Qt.ItemDataRole.DisplayRole:
+            if role == Qt.ItemDataRole.DisplayRole:
+                if index.column() == 0:
+                    return item.name
+                elif index.column() == 1:
                     return "Call"
+            elif role == MethodListModel.CustomDataRoles.ButtonRole:
+                if index.column() == 1:
+                    return True
+            elif role == MethodListModel.CustomDataRoles.TreeItemRole:
+                return item
             return None
 
         elif isinstance(item, DataclassTreeItem):
-            owning_Method_item = item.find_ancestor(MethodTreeItem)
-            if not owning_Method_item or not owning_Method_item.dataclass_instance:
+            owning_method_item = item.find_ancestor(MethodTreeItem)
+            if not owning_method_item or not owning_method_item.dataclass_instance:
                 return None
 
-            dataclass_instance = owning_Method_item.dataclass_instance
+            dataclass_instance = owning_method_item.dataclass_instance
 
             if item.field is None:
                 if index.column() == 0:
-                    return item.name
+                    if role == Qt.ItemDataRole.DisplayRole:
+                        return item.name
                 return None
 
             if role == Qt.ItemDataRole.DisplayRole:
@@ -350,11 +357,11 @@ class MethodListModel(QAbstractItemModel):
             if tree_item.field is None:
                 return False
 
-            owning_Method_item = tree_item.find_ancestor(MethodTreeItem)
-            if not owning_Method_item or not owning_Method_item.dataclass_instance:
+            owning_method_item = tree_item.find_ancestor(MethodTreeItem)
+            if not owning_method_item or not owning_method_item.dataclass_instance:
                 return False
 
-            dataclass_instance = owning_Method_item.dataclass_instance
+            dataclass_instance = owning_method_item.dataclass_instance
 
             if role == Qt.ItemDataRole.EditRole:
                 setattr(dataclass_instance, tree_item.name, value)
@@ -433,7 +440,7 @@ class MethodListModel(QAbstractItemModel):
         else:
             return QModelIndex()
 
-    def call_Method_at_index(self, index: QModelIndex):
+    def call_method_at_index(self, index: QModelIndex):
         if not index.isValid():
             return
         item = index.internalPointer()
@@ -449,9 +456,68 @@ class GRPCMethodsModel(MethodListModel):
         self._client = client
         self.set_object(None)
 
-    def fetch_initial_state(self):
-        pass
+    def _fetch_initial_state(self):
+        if self._object is None:
+            self.set_methods([])
+            return False
+
+        methods_data = []
+        try:
+            response = self._client.object_stub.GetMethods(Object(query=self._object))
+        except Exception as e:
+            self.set_methods([])
+            return False
+
+        for method in response.methods:
+            dataclass_instance = self._create_dataclass_instance(method)
+            if dataclass_instance is None:
+                continue
+
+            def call_method(instance=dataclass_instance):
+                print(f"call_method = {instance}")
+
+            methods_data.append((method.name, dataclass_instance, call_method))
+
+        self.set_methods(methods_data)
+        return True
+
+    def _create_dataclass_instance(self, method: Method):
+        fields = []
+        values = {}
+
+        for parameter in method.parameters:
+            base_path = parameter.name
+            base_value = convert_from_value(parameter.default_value)
+
+            if base_value is None:
+                return None
+
+            flatten_dict_field(
+                fields,
+                values,
+                base_value,
+                base_path,
+                field_prefix=base_path,
+                editable=True,
+            )
+
+        return create_properties_dataclass(fields, values)
 
     def set_object(self, query: typing.Optional[str]):
         self._object = query
-        self.fetch_initial_state()
+        self._fetch_initial_state()
+
+
+class FilteredAttributeTypeProxyModel(QSortFilterProxyModel):
+    def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
+        source_model = self.sourceModel()
+        index = source_model.index(source_row, 0, source_parent)
+        if not index.isValid():
+            return True
+
+        item = index.data(MethodListModel.CustomDataRoles.TreeItemRole)
+        return not (
+            isinstance(item, DataclassTreeItem)
+            and isinstance(item.name, str)
+            and item.name.endswith("type")
+        )

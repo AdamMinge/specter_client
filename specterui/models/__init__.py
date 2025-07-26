@@ -1,7 +1,7 @@
 from specterui.models.objects import GRPCObjectsModel
 from specterui.models.properties import (
     GRPCPropertiesModel,
-    FilteredPropertiesProxyModel,
+    FilteredPropertiesTypeProxyModel,
 )
 from specterui.models.recorder import GRPCRecorderConsoleItem
 from specterui.models.methods import (
@@ -11,12 +11,19 @@ from specterui.models.methods import (
     DataclassTreeItem,
     BaseTreeItem,
     HasNoDefaultError,
+    FilteredAttributeTypeProxyModel,
+)
+from specterui.models.utils import (
+    ObservableDict,
+    EmptyDataclass,
+    flatten_dict_field,
+    create_properties_dataclass,
 )
 
 __all__ = [
     "GRPCObjectsModel",
     "GRPCPropertiesModel",
-    "FilteredPropertiesProxyModel",
+    "FilteredPropertiesTypeProxyModel",
     "GRPCRecorderConsoleItem",
     "GRPCMethodsModel",
     "MethodListModel",
@@ -24,4 +31,9 @@ __all__ = [
     "DataclassTreeItem",
     "BaseTreeItem",
     "HasNoDefaultError",
+    "FilteredAttributeTypeProxyModel",
+    "ObservableDict",
+    "EmptyDataclass",
+    "flatten_dict_field",
+    "create_properties_dataclass",
 ]

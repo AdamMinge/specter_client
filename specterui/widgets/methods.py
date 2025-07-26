@@ -1,6 +1,4 @@
 import typing
-import dataclasses
-import datetime
 
 from PySide6.QtWidgets import (
     QDockWidget,
@@ -8,18 +6,18 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QTreeView,
     QMenu,
-    QMessageBox,
     QHeaderView,
 )
 from PySide6.QtCore import Qt, SignalInstance, QModelIndex, QAbstractItemModel, QPoint
 
 from specterui.client import Client
-from specterui.delegates import MethodListDelegate
+from specterui.delegates import MethodButtonDelegate
 from specterui.models import (
     MethodListModel,
     DataclassTreeItem,
     HasNoDefaultError,
     GRPCMethodsModel,
+    FilteredAttributeTypeProxyModel,
 )
 
 
@@ -37,16 +35,23 @@ class MethodsListTreeView(QTreeView):
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self._show_context_menu)
 
+        self.setItemDelegateForColumn(1, MethodButtonDelegate(self))
+
     def _get_item_path(self, index: QModelIndex) -> typing.Tuple[str, ...]:
+        model = self.model()
+
         path = ()
-        current = index
-        while (
-            current.isValid()
-            and current.internalPointer() is not None
-            and current.internalPointer().parent() is not None
-        ):
-            path = (current.internalPointer().name,) + path
-            current = current.parent()
+        current_index = index
+        current_item = model.data(
+            current_index, MethodListModel.CustomDataRoles.TreeItemRole
+        )
+
+        while current_item is not None and current_item.parent() is not None:
+            path = (current_item.name,) + path
+            current_index = current_index.parent()
+            current_item = model.data(
+                current_index, MethodListModel.CustomDataRoles.TreeItemRole
+            )
         return path
 
     def _on_expansion_change(self, index: QModelIndex, expanded: bool) -> None:
@@ -86,10 +91,9 @@ class MethodsListTreeView(QTreeView):
         super().setModel(model)
 
         if model is not None:
-            if isinstance(model, MethodListModel):
-                self._model_signals.append(
-                    model.modelReset.connect(self._restore_expansion_state)
-                )
+            self._model_signals.append(
+                model.modelReset.connect(self._restore_expansion_state)
+            )
             self._restore_expansion_state()
 
     def _restore_expansion_state(self) -> None:
@@ -109,12 +113,14 @@ class MethodsListTreeView(QTreeView):
         if not index.isValid():
             return
 
-        item = index.internalPointer()
+        item = model.data(index, MethodListModel.CustomDataRoles.TreeItemRole)
         if isinstance(item, DataclassTreeItem) and item.field is not None:
             try:
                 model = self.model()
                 if isinstance(model, MethodListModel):
-                    default_val = model.get_default_value(item.field)
+                    default_val = model.data(
+                        index, MethodListModel.CustomDataRoles.DefaultValueRole
+                    )
                     current_val = model.data(index, Qt.ItemDataRole.EditRole)
 
                     if default_val != current_val:
@@ -139,15 +145,7 @@ class MethodsListTreeView(QTreeView):
         if not index.isValid():
             return
         model = self.model()
-        if isinstance(model, MethodListModel):
-            try:
-                model.setData(
-                    index, None, MethodListModel.CustomDataRoles.DefaultValueRole
-                )
-            except Exception as exception:
-                QMessageBox.warning(
-                    self, "Error", f"Could not set to default: {exception}"
-                )
+        model.setData(index, None, MethodListModel.CustomDataRoles.DefaultValueRole)
 
 
 class MethodsDock(QDockWidget):
@@ -158,10 +156,10 @@ class MethodsDock(QDockWidget):
 
     def _init_ui(self):
         self._model = GRPCMethodsModel(self._client)
-        self._delegate = MethodListDelegate(self)
-        self._view = MethodsListTreeView(self)
-        self._view.setModel(self._model)
-        self._view.setItemDelegate(self._delegate)
+        self._proxy_model = FilteredAttributeTypeProxyModel()
+        self._proxy_model.setSourceModel(self._model)
+        self._view = MethodsListTreeView()
+        self._view.setModel(self._proxy_model)
         self._view.header().setSectionResizeMode(
             QHeaderView.ResizeMode.ResizeToContents
         )
@@ -176,4 +174,6 @@ class MethodsDock(QDockWidget):
         self.setWidget(container)
 
     def set_object(self, query: typing.Optional[str]):
+        self._proxy_model.setSourceModel(None)
         self._model.set_object(query)
+        self._proxy_model.setSourceModel(self._model)

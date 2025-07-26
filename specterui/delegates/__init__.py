@@ -1,3 +1,3 @@
-from specterui.delegates.methods import MethodListDelegate
+from specterui.delegates.methods import MethodButtonDelegate
 
-__all__ = ["MethodListDelegate"]
+__all__ = ["MethodButtonDelegate"]

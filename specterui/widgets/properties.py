@@ -14,7 +14,7 @@ from specterui.client import Client
 
 from specterui.models import (
     GRPCPropertiesModel,
-    FilteredPropertiesProxyModel,
+    FilteredPropertiesTypeProxyModel,
 )
 
 
@@ -26,7 +26,7 @@ class PropertiesDock(QDockWidget):
 
     def _init_ui(self):
         self._model = GRPCPropertiesModel(self._client)
-        self._proxy_model = FilteredPropertiesProxyModel()
+        self._proxy_model = FilteredPropertiesTypeProxyModel()
         self._proxy_model.setSourceModel(self._model)
         self._view = DataClassTreeView()
         self._view.setModel(self._proxy_model)

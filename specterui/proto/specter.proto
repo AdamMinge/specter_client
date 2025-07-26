@@ -64,12 +64,12 @@ message Objects {
 }
 
 message ObjectTree {
-    repeated ObjectNode nodes = 1;
+    repeated ObjectNode roots = 1;
 }
 
 message ObjectNode {
     Object object = 1;
-    repeated ObjectNode nodes = 2;
+    repeated ObjectNode children = 2;
 }
 
 message MethodCall {
@@ -85,7 +85,17 @@ message PropertyUpdate {
 }
 
 message Methods {
-    repeated string methods = 1;
+    repeated Method methods = 1;
+}
+
+message Method {
+    string name = 1;
+    repeated Parameter parameters = 2;
+}
+
+message Parameter {
+    string name = 1;
+    google.protobuf.Value default_value = 2;
 }
 
 message Properties {
@@ -93,7 +103,7 @@ message Properties {
 }
 
 message Property {
-    string property = 1;
+    string name = 1;
     google.protobuf.Value value = 2;
     bool read_only = 3;
 }
@@ -148,5 +158,4 @@ message PropertyUpdated {
     string property = 1;
     google.protobuf.Value old_value = 2;
     google.protobuf.Value new_value = 3;
-    
 }
