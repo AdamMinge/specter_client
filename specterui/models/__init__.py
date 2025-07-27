@@ -17,6 +17,7 @@ from specterui.models.utils import (
     ObservableDict,
     EmptyDataclass,
     flatten_dict_field,
+    unflatten_dict_field,
     create_properties_dataclass,
 )
 
@@ -35,5 +36,6 @@ __all__ = [
     "ObservableDict",
     "EmptyDataclass",
     "flatten_dict_field",
+    "unflatten_dict_field",
     "create_properties_dataclass",
 ]

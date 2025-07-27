@@ -17,6 +17,7 @@ from specterui.models.utils import (
     ObservableDict,
     EmptyDataclass,
     flatten_dict_field,
+    unflatten_dict_field,
     create_properties_dataclass,
 )
 
@@ -53,14 +54,14 @@ class GRPCPropertiesModel(DataclassModel):
             if base_value is None:
                 continue
 
-            flatten_dict_field(
-                fields,
-                values,
+            prop_fields, prop_values = flatten_dict_field(
                 base_value,
                 base_path,
                 field_prefix=base_path,
                 editable=editable,
             )
+            fields.extend(prop_fields)
+            values.update(prop_values)
 
         dataclass_instance = create_properties_dataclass(
             fields, values, self.change_property
@@ -71,16 +72,10 @@ class GRPCPropertiesModel(DataclassModel):
     def change_property(
         self, field_name: str, old_value: typing.Any, new_value: typing.Any
     ):
-        instance = self.get_dataclass()
-        observed_dict: ObservableDict = getattr(instance, "__dict__")
         root_field = field_name.split("_", 1)[0]
-
-        if field_name == root_field:
-            value_to_send = self.build_root_value(new_value)
-        else:
-            value_to_send = self.build_nested_value(
-                field_name, root_field, new_value, observed_dict
-            )
+        value_to_send = unflatten_dict_field(
+            self.get_dataclass(), root_field, [(field_name, new_value)]
+        )
 
         self._client.object_stub.UpdateProperty(
             PropertyUpdate(
@@ -89,42 +84,6 @@ class GRPCPropertiesModel(DataclassModel):
                 value=convert_to_value(value_to_send),
             )
         )
-
-    def build_root_value(self, value: typing.Any) -> typing.Any:
-        return value
-
-    def build_nested_value(
-        self,
-        field_name: str,
-        root_field: str,
-        new_value: typing.Any,
-        observed_dict: dict,
-    ) -> dict:
-        nested_items = {
-            k[len(root_field) + 1 :]: (new_value if k == field_name else v)
-            for k, v in observed_dict.items()
-            if k.startswith(f"{root_field}_")
-        }
-
-        merged = {}
-        for key, val in nested_items.items():
-            keys = key.split("_") if key else []
-            sub_tree = self.nest_keys(keys, val)
-            self.deep_merge(merged, sub_tree)
-
-        return merged
-
-    def nest_keys(self, keys: list[str], val: typing.Any) -> dict:
-        if not keys:
-            return val
-        return {keys[0]: self.nest_keys(keys[1:], val)}
-
-    def deep_merge(self, target: dict, src: dict) -> None:
-        for k, v in src.items():
-            if isinstance(v, dict) and k in target and isinstance(target[k], dict):
-                self.deep_merge(target[k], v)
-            else:
-                target[k] = v
 
     def handle_properties_changes(self, change):
         if change.HasField("added"):

@@ -15,9 +15,13 @@ from PySide6.QtCore import (
     QSortFilterProxyModel,
 )
 
-from specterui.proto.specter_pb2 import Object, Method
+from specterui.proto.specter_pb2 import Object, Method, MethodCall
 from specterui.client import Client, convert_to_value, convert_from_value
-from specterui.models.utils import flatten_dict_field, create_properties_dataclass
+from specterui.models.utils import (
+    flatten_dict_field,
+    unflatten_dict_field,
+    create_properties_dataclass,
+)
 
 
 class BaseTreeItem:
@@ -473,13 +477,34 @@ class GRPCMethodsModel(MethodListModel):
             if dataclass_instance is None:
                 continue
 
-            def call_method(instance=dataclass_instance):
-                print(f"call_method = {instance}")
-
+            call_method = self._create_call_method(method.name, dataclass_instance)
             methods_data.append((method.name, dataclass_instance, call_method))
 
         self.set_methods(methods_data)
         return True
+
+    def _create_call_method(self, method_name, dataclass_instance):
+        def call_method(method_name=method_name, dataclass_instance=dataclass_instance):
+            root_fields = set()
+            for field in dataclasses.fields(dataclass_instance):
+                root_field = field.name.split("_", 1)[0]
+                root_fields.add(root_field)
+
+            arguments = []
+            for root_field in root_fields:
+                value_to_send = unflatten_dict_field(dataclass_instance, root_field)
+
+                arguments.append(convert_to_value(value_to_send))
+
+            self._client.object_stub.CallMethod(
+                MethodCall(
+                    object=Object(query=self._object),
+                    method=method_name,
+                    arguments=arguments,
+                )
+            )
+
+        return call_method
 
     def _create_dataclass_instance(self, method: Method):
         fields = []
@@ -492,14 +517,14 @@ class GRPCMethodsModel(MethodListModel):
             if base_value is None:
                 return None
 
-            flatten_dict_field(
-                fields,
-                values,
+            prop_fields, prop_values = flatten_dict_field(
                 base_value,
                 base_path,
                 field_prefix=base_path,
                 editable=True,
             )
+            fields.extend(prop_fields)
+            values.update(prop_values)
 
         return create_properties_dataclass(fields, values)
 
