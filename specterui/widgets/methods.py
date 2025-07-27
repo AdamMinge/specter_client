@@ -113,6 +113,7 @@ class MethodsListTreeView(QTreeView):
         if not index.isValid():
             return
 
+        model = self.model()
         item = model.data(index, MethodListModel.CustomDataRoles.TreeItemRole)
         if isinstance(item, DataclassTreeItem) and item.field is not None:
             try:
