@@ -16,7 +16,9 @@ from PySide6.QtCore import (
 )
 
 from specterui.proto.specter_pb2 import Object, Method, MethodCall
+
 from specterui.client import Client, convert_to_value, convert_from_value
+from specterui.context import Context
 from specterui.models.utils import (
     flatten_dict_field,
     unflatten_dict_field,
@@ -454,20 +456,30 @@ class MethodListModel(QAbstractItemModel):
 
 
 class GRPCMethodsModel(MethodListModel):
-    def __init__(self, client: Client, parent=None):
+    def __init__(self, client: Client, context: Context, parent=None):
         super().__init__(parent)
 
         self._client = client
-        self.set_object(None)
+        self._context = context
+
+        self._init_connections()
+
+    def _init_connections(self):
+        self._context.current_object_changed.connect(self._on_current_object_changed)
+
+    def _on_current_object_changed(self):
+        self._fetch_initial_state()
 
     def _fetch_initial_state(self):
-        if self._object is None:
+        if self._context.current_object is None:
             self.set_methods([])
             return False
 
         methods_data = []
         try:
-            response = self._client.object_stub.GetMethods(Object(query=self._object))
+            response = self._client.object_stub.GetMethods(
+                Object(query=self._context.current_object)
+            )
         except Exception as e:
             self.set_methods([])
             return False
@@ -498,7 +510,7 @@ class GRPCMethodsModel(MethodListModel):
 
             self._client.object_stub.CallMethod(
                 MethodCall(
-                    object=Object(query=self._object),
+                    object=Object(query=self._context.current_object),
                     method=method_name,
                     arguments=arguments,
                 )
@@ -527,10 +539,6 @@ class GRPCMethodsModel(MethodListModel):
             values.update(prop_values)
 
         return create_properties_dataclass(fields, values)
-
-    def set_object(self, query: typing.Optional[str]):
-        self._object = query
-        self._fetch_initial_state()
 
 
 class FilteredAttributeTypeProxyModel(QSortFilterProxyModel):

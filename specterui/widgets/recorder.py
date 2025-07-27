@@ -13,16 +13,17 @@ from pyside6_utils.widgets import ConsoleWidget
 from pyside6_utils.models.console_widget_models.console_model import ConsoleModel
 
 from specterui.client import Client
-
+from specterui.context import Context
 from specterui.models import (
     GRPCRecorderConsoleItem,
 )
 
 
 class RecorderDock(QDockWidget):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client, context: Context):
         super().__init__("Recorder")
         self._client = client
+        self._context = context
         self._init_ui()
         self._init_connection()
         self._update_buttons()

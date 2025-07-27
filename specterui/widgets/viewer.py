@@ -10,17 +10,20 @@ from PySide6.QtGui import QPixmap
 from PySide6.QtCore import Qt, QByteArray
 
 from specterui.proto.specter_pb2 import Object
+
 from specterui.client import Client, StreamReader
+from specterui.context import Context
 
 
 class ViewerWidget(QWidget):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client, context: Context):
         super().__init__()
         self._client = client
+        self._context = context
         self._stream_reader = None
         self._current_pixmap = QPixmap()
         self._init_ui()
-        self.set_object(None)
+        self._init_connection()
 
     def _init_ui(self):
         self.layout = QVBoxLayout()
@@ -32,16 +35,17 @@ class ViewerWidget(QWidget):
 
         self.setLayout(self.layout)
 
-    def set_object(self, query: typing.Optional[str]):
-        self._object = query
+    def _init_connection(self):
+        self._context.current_object_changed.connect(self._on_current_object_changed)
 
+    def _on_current_object_changed(self):
         if self._stream_reader:
             self._stream_reader.stop()
 
-        if self._object is not None:
+        if self._context.current_object is not None:
             self._stream_reader = StreamReader(
                 stream=self._client.preview_stub.ListenPreview(
-                    Object(query=self._object)
+                    Object(query=self._context.current_object)
                 ),
                 on_data=self.display_image,
             )

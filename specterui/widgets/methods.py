@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, SignalInstance, QModelIndex, QAbstractItemModel, QPoint
 
 from specterui.client import Client
+from specterui.context import Context
 from specterui.delegates import MethodButtonDelegate
 from specterui.models import (
     MethodListModel,
@@ -150,13 +151,14 @@ class MethodsListTreeView(QTreeView):
 
 
 class MethodsDock(QDockWidget):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client, context: Context):
         super().__init__("Methods")
         self._client = client
+        self._context = context
         self._init_ui()
 
     def _init_ui(self):
-        self._model = GRPCMethodsModel(self._client)
+        self._model = GRPCMethodsModel(self._client, self._context)
         self._proxy_model = FilteredAttributeTypeProxyModel()
         self._proxy_model.setSourceModel(self._model)
         self._view = MethodsListTreeView()
@@ -173,8 +175,3 @@ class MethodsDock(QDockWidget):
         layout.addWidget(self._view)
         container.setLayout(layout)
         self.setWidget(container)
-
-    def set_object(self, query: typing.Optional[str]):
-        self._proxy_model.setSourceModel(None)
-        self._model.set_object(query)
-        self._proxy_model.setSourceModel(self._model)

@@ -8,18 +8,17 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Signal, Qt, QModelIndex
 
 from specterui.client import Client
-
+from specterui.context import Context
 from specterui.models import (
     GRPCObjectsModel,
 )
 
 
 class ObjectsDock(QDockWidget):
-    selected_object = Signal(str)
-
-    def __init__(self, client: Client):
+    def __init__(self, client: Client, context: Context):
         super().__init__("Objects")
         self._client = client
+        self._context = context
         self._init_ui()
         self._init_connection()
 
@@ -48,16 +47,14 @@ class ObjectsDock(QDockWidget):
                 Qt.ItemDataRole.UserRole,
             )
 
-        self.selected_object.emit(query)
+        self._context.set_current_object(query)
 
     def _on_data_changed(
         self, topLeft: QModelIndex, bottomRight: QModelIndex, roles=None
     ):
         current_index = self._view.currentIndex()
-
         if not current_index.isValid():
             return
-
         if current_index.parent() != topLeft.parent():
             return
 
@@ -65,12 +62,10 @@ class ObjectsDock(QDockWidget):
             topLeft.row() <= current_index.row() <= bottomRight.row()
             and topLeft.column() <= current_index.column() <= bottomRight.column()
         ):
-
             query = self._model.data(
                 current_index.sibling(
                     current_index.row(), GRPCObjectsModel.Columns.Query
                 ),
                 Qt.ItemDataRole.UserRole,
             )
-
-            self.selected_object.emit(query)
+            self._context.update_current_object(query)
