@@ -4,6 +4,7 @@ from specterui.widgets.objects import ObjectsDock
 from specterui.widgets.properties import PropertiesDock
 from specterui.widgets.recorder import RecorderDock
 from specterui.widgets.terminal import TerminalDock
+from specterui.widgets.editor import EditorDock
 from specterui.widgets.viewer import ViewerWidget
 from specterui.widgets.toolbar import ToolBar
 
@@ -15,6 +16,7 @@ __all__ = [
     "PropertiesDock",
     "RecorderDock",
     "TerminalDock",
+    "EditorDock",
     "ViewerWidget",
     "ToolBar",
 ]
