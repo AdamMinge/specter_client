@@ -86,8 +86,12 @@ def attach_to_new_process(
     library: str,
     subprocess_name: typing.Optional[str] = None,
 ) -> Client:
+
+    app_full_path = os.path.abspath(app)
+    app_directory = os.path.dirname(app_full_path)
+
     try:
-        process = subprocess.Popen([app], env=os.environ)
+        process = subprocess.Popen([app], env=os.environ, cwd=app_directory)
         time.sleep(0.5)
     except OSError as e:
         raise AttachException(str(e))
