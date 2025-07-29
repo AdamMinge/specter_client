@@ -27,7 +27,7 @@ if _version_not_supported:
 
 
 class PreviewerServiceStub(object):
-    """-------------------------------- Previewer ------------------------------- //
+    """----------------------------- PreviewerService ---------------------------- //
 
     """
 
@@ -39,13 +39,13 @@ class PreviewerServiceStub(object):
         """
         self.ListenPreview = channel.unary_stream(
                 '/specter_proto.PreviewerService/ListenPreview',
-                request_serializer=specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
+                request_serializer=specterui_dot_proto_dot_specter__pb2.ObjectId.SerializeToString,
                 response_deserializer=specterui_dot_proto_dot_specter__pb2.PreviewImage.FromString,
                 _registered_method=True)
 
 
 class PreviewerServiceServicer(object):
-    """-------------------------------- Previewer ------------------------------- //
+    """----------------------------- PreviewerService ---------------------------- //
 
     """
 
@@ -60,7 +60,7 @@ def add_PreviewerServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'ListenPreview': grpc.unary_stream_rpc_method_handler(
                     servicer.ListenPreview,
-                    request_deserializer=specterui_dot_proto_dot_specter__pb2.Object.FromString,
+                    request_deserializer=specterui_dot_proto_dot_specter__pb2.ObjectId.FromString,
                     response_serializer=specterui_dot_proto_dot_specter__pb2.PreviewImage.SerializeToString,
             ),
     }
@@ -72,7 +72,7 @@ def add_PreviewerServiceServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class PreviewerService(object):
-    """-------------------------------- Previewer ------------------------------- //
+    """----------------------------- PreviewerService ---------------------------- //
 
     """
 
@@ -91,7 +91,7 @@ class PreviewerService(object):
             request,
             target,
             '/specter_proto.PreviewerService/ListenPreview',
-            specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
+            specterui_dot_proto_dot_specter__pb2.ObjectId.SerializeToString,
             specterui_dot_proto_dot_specter__pb2.PreviewImage.FromString,
             options,
             channel_credentials,
@@ -105,7 +105,7 @@ class PreviewerService(object):
 
 
 class MarkerServiceStub(object):
-    """--------------------------------- Marker --------------------------------- //
+    """------------------------------ MarkerService ------------------------------ //
 
     """
 
@@ -128,7 +128,7 @@ class MarkerServiceStub(object):
 
 
 class MarkerServiceServicer(object):
-    """--------------------------------- Marker --------------------------------- //
+    """------------------------------ MarkerService ------------------------------ //
 
     """
 
@@ -166,7 +166,7 @@ def add_MarkerServiceServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class MarkerService(object):
-    """--------------------------------- Marker --------------------------------- //
+    """------------------------------ MarkerService ------------------------------ //
 
     """
 
@@ -226,7 +226,7 @@ class MarkerService(object):
 
 
 class RecorderServiceStub(object):
-    """--------------------------------- Recorder -------------------------------- //
+    """----------------------------- RecorderService ----------------------------- //
 
     """
 
@@ -244,7 +244,7 @@ class RecorderServiceStub(object):
 
 
 class RecorderServiceServicer(object):
-    """--------------------------------- Recorder -------------------------------- //
+    """----------------------------- RecorderService ----------------------------- //
 
     """
 
@@ -271,7 +271,7 @@ def add_RecorderServiceServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class RecorderService(object):
-    """--------------------------------- Recorder -------------------------------- //
+    """----------------------------- RecorderService ----------------------------- //
 
     """
 
@@ -304,7 +304,7 @@ class RecorderService(object):
 
 
 class ObjectServiceStub(object):
-    """--------------------------------- Object ---------------------------------- //
+    """----------------------------- ObjectService ------------------------------- //
 
     """
 
@@ -316,23 +316,28 @@ class ObjectServiceStub(object):
         """
         self.GetTree = channel.unary_unary(
                 '/specter_proto.ObjectService/GetTree',
-                request_serializer=specterui_dot_proto_dot_specter__pb2.OptionalObject.SerializeToString,
+                request_serializer=specterui_dot_proto_dot_specter__pb2.OptionalObjectId.SerializeToString,
                 response_deserializer=specterui_dot_proto_dot_specter__pb2.ObjectTree.FromString,
                 _registered_method=True)
         self.Find = channel.unary_unary(
                 '/specter_proto.ObjectService/Find',
-                request_serializer=specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
-                response_deserializer=specterui_dot_proto_dot_specter__pb2.Objects.FromString,
+                request_serializer=specterui_dot_proto_dot_specter__pb2.ObjectSearchQuery.SerializeToString,
+                response_deserializer=specterui_dot_proto_dot_specter__pb2.ObjectIds.FromString,
+                _registered_method=True)
+        self.GetObjectQuery = channel.unary_unary(
+                '/specter_proto.ObjectService/GetObjectQuery',
+                request_serializer=specterui_dot_proto_dot_specter__pb2.ObjectId.SerializeToString,
+                response_deserializer=specterui_dot_proto_dot_specter__pb2.ObjectSearchQuery.FromString,
                 _registered_method=True)
         self.GetParent = channel.unary_unary(
                 '/specter_proto.ObjectService/GetParent',
-                request_serializer=specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
-                response_deserializer=specterui_dot_proto_dot_specter__pb2.Object.FromString,
+                request_serializer=specterui_dot_proto_dot_specter__pb2.ObjectId.SerializeToString,
+                response_deserializer=specterui_dot_proto_dot_specter__pb2.ObjectId.FromString,
                 _registered_method=True)
         self.GetChildren = channel.unary_unary(
                 '/specter_proto.ObjectService/GetChildren',
-                request_serializer=specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
-                response_deserializer=specterui_dot_proto_dot_specter__pb2.Objects.FromString,
+                request_serializer=specterui_dot_proto_dot_specter__pb2.ObjectId.SerializeToString,
+                response_deserializer=specterui_dot_proto_dot_specter__pb2.ObjectIds.FromString,
                 _registered_method=True)
         self.CallMethod = channel.unary_unary(
                 '/specter_proto.ObjectService/CallMethod',
@@ -346,28 +351,28 @@ class ObjectServiceStub(object):
                 _registered_method=True)
         self.GetMethods = channel.unary_unary(
                 '/specter_proto.ObjectService/GetMethods',
-                request_serializer=specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
+                request_serializer=specterui_dot_proto_dot_specter__pb2.ObjectId.SerializeToString,
                 response_deserializer=specterui_dot_proto_dot_specter__pb2.Methods.FromString,
                 _registered_method=True)
         self.GetProperties = channel.unary_unary(
                 '/specter_proto.ObjectService/GetProperties',
-                request_serializer=specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
+                request_serializer=specterui_dot_proto_dot_specter__pb2.ObjectId.SerializeToString,
                 response_deserializer=specterui_dot_proto_dot_specter__pb2.Properties.FromString,
                 _registered_method=True)
         self.ListenTreeChanges = channel.unary_stream(
                 '/specter_proto.ObjectService/ListenTreeChanges',
                 request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-                response_deserializer=specterui_dot_proto_dot_specter__pb2.ObjectChange.FromString,
+                response_deserializer=specterui_dot_proto_dot_specter__pb2.TreeChange.FromString,
                 _registered_method=True)
         self.ListenPropertiesChanges = channel.unary_stream(
                 '/specter_proto.ObjectService/ListenPropertiesChanges',
-                request_serializer=specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
+                request_serializer=specterui_dot_proto_dot_specter__pb2.ObjectId.SerializeToString,
                 response_deserializer=specterui_dot_proto_dot_specter__pb2.PropertyChange.FromString,
                 _registered_method=True)
 
 
 class ObjectServiceServicer(object):
-    """--------------------------------- Object ---------------------------------- //
+    """----------------------------- ObjectService ------------------------------- //
 
     """
 
@@ -378,6 +383,12 @@ class ObjectServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def Find(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetObjectQuery(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -436,23 +447,28 @@ def add_ObjectServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'GetTree': grpc.unary_unary_rpc_method_handler(
                     servicer.GetTree,
-                    request_deserializer=specterui_dot_proto_dot_specter__pb2.OptionalObject.FromString,
+                    request_deserializer=specterui_dot_proto_dot_specter__pb2.OptionalObjectId.FromString,
                     response_serializer=specterui_dot_proto_dot_specter__pb2.ObjectTree.SerializeToString,
             ),
             'Find': grpc.unary_unary_rpc_method_handler(
                     servicer.Find,
-                    request_deserializer=specterui_dot_proto_dot_specter__pb2.Object.FromString,
-                    response_serializer=specterui_dot_proto_dot_specter__pb2.Objects.SerializeToString,
+                    request_deserializer=specterui_dot_proto_dot_specter__pb2.ObjectSearchQuery.FromString,
+                    response_serializer=specterui_dot_proto_dot_specter__pb2.ObjectIds.SerializeToString,
+            ),
+            'GetObjectQuery': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetObjectQuery,
+                    request_deserializer=specterui_dot_proto_dot_specter__pb2.ObjectId.FromString,
+                    response_serializer=specterui_dot_proto_dot_specter__pb2.ObjectSearchQuery.SerializeToString,
             ),
             'GetParent': grpc.unary_unary_rpc_method_handler(
                     servicer.GetParent,
-                    request_deserializer=specterui_dot_proto_dot_specter__pb2.Object.FromString,
-                    response_serializer=specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
+                    request_deserializer=specterui_dot_proto_dot_specter__pb2.ObjectId.FromString,
+                    response_serializer=specterui_dot_proto_dot_specter__pb2.ObjectId.SerializeToString,
             ),
             'GetChildren': grpc.unary_unary_rpc_method_handler(
                     servicer.GetChildren,
-                    request_deserializer=specterui_dot_proto_dot_specter__pb2.Object.FromString,
-                    response_serializer=specterui_dot_proto_dot_specter__pb2.Objects.SerializeToString,
+                    request_deserializer=specterui_dot_proto_dot_specter__pb2.ObjectId.FromString,
+                    response_serializer=specterui_dot_proto_dot_specter__pb2.ObjectIds.SerializeToString,
             ),
             'CallMethod': grpc.unary_unary_rpc_method_handler(
                     servicer.CallMethod,
@@ -466,22 +482,22 @@ def add_ObjectServiceServicer_to_server(servicer, server):
             ),
             'GetMethods': grpc.unary_unary_rpc_method_handler(
                     servicer.GetMethods,
-                    request_deserializer=specterui_dot_proto_dot_specter__pb2.Object.FromString,
+                    request_deserializer=specterui_dot_proto_dot_specter__pb2.ObjectId.FromString,
                     response_serializer=specterui_dot_proto_dot_specter__pb2.Methods.SerializeToString,
             ),
             'GetProperties': grpc.unary_unary_rpc_method_handler(
                     servicer.GetProperties,
-                    request_deserializer=specterui_dot_proto_dot_specter__pb2.Object.FromString,
+                    request_deserializer=specterui_dot_proto_dot_specter__pb2.ObjectId.FromString,
                     response_serializer=specterui_dot_proto_dot_specter__pb2.Properties.SerializeToString,
             ),
             'ListenTreeChanges': grpc.unary_stream_rpc_method_handler(
                     servicer.ListenTreeChanges,
                     request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-                    response_serializer=specterui_dot_proto_dot_specter__pb2.ObjectChange.SerializeToString,
+                    response_serializer=specterui_dot_proto_dot_specter__pb2.TreeChange.SerializeToString,
             ),
             'ListenPropertiesChanges': grpc.unary_stream_rpc_method_handler(
                     servicer.ListenPropertiesChanges,
-                    request_deserializer=specterui_dot_proto_dot_specter__pb2.Object.FromString,
+                    request_deserializer=specterui_dot_proto_dot_specter__pb2.ObjectId.FromString,
                     response_serializer=specterui_dot_proto_dot_specter__pb2.PropertyChange.SerializeToString,
             ),
     }
@@ -493,7 +509,7 @@ def add_ObjectServiceServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class ObjectService(object):
-    """--------------------------------- Object ---------------------------------- //
+    """----------------------------- ObjectService ------------------------------- //
 
     """
 
@@ -512,7 +528,7 @@ class ObjectService(object):
             request,
             target,
             '/specter_proto.ObjectService/GetTree',
-            specterui_dot_proto_dot_specter__pb2.OptionalObject.SerializeToString,
+            specterui_dot_proto_dot_specter__pb2.OptionalObjectId.SerializeToString,
             specterui_dot_proto_dot_specter__pb2.ObjectTree.FromString,
             options,
             channel_credentials,
@@ -539,8 +555,35 @@ class ObjectService(object):
             request,
             target,
             '/specter_proto.ObjectService/Find',
-            specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
-            specterui_dot_proto_dot_specter__pb2.Objects.FromString,
+            specterui_dot_proto_dot_specter__pb2.ObjectSearchQuery.SerializeToString,
+            specterui_dot_proto_dot_specter__pb2.ObjectIds.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetObjectQuery(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/specter_proto.ObjectService/GetObjectQuery',
+            specterui_dot_proto_dot_specter__pb2.ObjectId.SerializeToString,
+            specterui_dot_proto_dot_specter__pb2.ObjectSearchQuery.FromString,
             options,
             channel_credentials,
             insecure,
@@ -566,8 +609,8 @@ class ObjectService(object):
             request,
             target,
             '/specter_proto.ObjectService/GetParent',
-            specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
-            specterui_dot_proto_dot_specter__pb2.Object.FromString,
+            specterui_dot_proto_dot_specter__pb2.ObjectId.SerializeToString,
+            specterui_dot_proto_dot_specter__pb2.ObjectId.FromString,
             options,
             channel_credentials,
             insecure,
@@ -593,8 +636,8 @@ class ObjectService(object):
             request,
             target,
             '/specter_proto.ObjectService/GetChildren',
-            specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
-            specterui_dot_proto_dot_specter__pb2.Objects.FromString,
+            specterui_dot_proto_dot_specter__pb2.ObjectId.SerializeToString,
+            specterui_dot_proto_dot_specter__pb2.ObjectIds.FromString,
             options,
             channel_credentials,
             insecure,
@@ -674,7 +717,7 @@ class ObjectService(object):
             request,
             target,
             '/specter_proto.ObjectService/GetMethods',
-            specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
+            specterui_dot_proto_dot_specter__pb2.ObjectId.SerializeToString,
             specterui_dot_proto_dot_specter__pb2.Methods.FromString,
             options,
             channel_credentials,
@@ -701,7 +744,7 @@ class ObjectService(object):
             request,
             target,
             '/specter_proto.ObjectService/GetProperties',
-            specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
+            specterui_dot_proto_dot_specter__pb2.ObjectId.SerializeToString,
             specterui_dot_proto_dot_specter__pb2.Properties.FromString,
             options,
             channel_credentials,
@@ -729,7 +772,7 @@ class ObjectService(object):
             target,
             '/specter_proto.ObjectService/ListenTreeChanges',
             google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-            specterui_dot_proto_dot_specter__pb2.ObjectChange.FromString,
+            specterui_dot_proto_dot_specter__pb2.TreeChange.FromString,
             options,
             channel_credentials,
             insecure,
@@ -755,7 +798,7 @@ class ObjectService(object):
             request,
             target,
             '/specter_proto.ObjectService/ListenPropertiesChanges',
-            specterui_dot_proto_dot_specter__pb2.Object.SerializeToString,
+            specterui_dot_proto_dot_specter__pb2.ObjectId.SerializeToString,
             specterui_dot_proto_dot_specter__pb2.PropertyChange.FromString,
             options,
             channel_credentials,

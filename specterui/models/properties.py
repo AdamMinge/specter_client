@@ -11,10 +11,9 @@ from PySide6.QtCore import (
 
 from pyside6_utils.models import DataclassModel
 
-from specterui.proto.specter_pb2 import Object, PropertyUpdate
+from specterui.proto.specter_pb2 import ObjectId, PropertyUpdate
 
 from specterui.client import Client, StreamReader, convert_to_value, convert_from_value
-from specterui.context import Context
 from specterui.models.utils import (
     ObservableDict,
     EmptyDataclass,
@@ -25,28 +24,25 @@ from specterui.models.utils import (
 
 
 class GRPCPropertiesModel(DataclassModel):
-    def __init__(self, client: Client, context: Context, parent=None):
+    def __init__(self, client: Client, parent=None):
         super().__init__(EmptyDataclass(), parent)
 
         self._client = client
-        self._context = context
         self._stream_reader = None
+        self._object_id = None
 
-        self._init_connections()
+    def set_object(self, object_id: str):
+        self._object_id = object_id
 
-    def _init_connections(self):
-        self._context.current_object_changed.connect(self._on_current_object_changed)
-
-    def _on_current_object_changed(self):
         self._fetch_initial_state()
 
         if self._stream_reader:
             self._stream_reader.stop()
 
-        if self._context.current_object is not None:
+        if self._object_id is not None:
             self._stream_reader = StreamReader(
                 stream=self._client.object_stub.ListenPropertiesChanges(
-                    Object(query=self._context.current_object)
+                    ObjectId(id=self._object_id)
                 ),
                 on_data=self._handle_properties_changes,
             )
@@ -54,13 +50,13 @@ class GRPCPropertiesModel(DataclassModel):
             self._stream_reader = None
 
     def _fetch_initial_state(self) -> bool:
-        if self._context.current_object is None:
+        if self._object_id is None:
             self.set_dataclass_instance(EmptyDataclass())
             return False
 
         try:
             response = self._client.object_stub.GetProperties(
-                Object(query=self._context.current_object)
+                ObjectId(id=self._object_id)
             )
         except Exception:
             self.set_dataclass_instance(EmptyDataclass())
@@ -70,7 +66,7 @@ class GRPCPropertiesModel(DataclassModel):
         values = {}
 
         for prop in response.properties:
-            base_path = prop.name
+            base_path = prop.property_name
             base_value = convert_from_value(prop.value)
             editable = not prop.read_only
 
@@ -102,8 +98,8 @@ class GRPCPropertiesModel(DataclassModel):
 
         self._client.object_stub.UpdateProperty(
             PropertyUpdate(
-                object=Object(query=self._context.current_object),
-                property=root_field,
+                object_id=ObjectId(id=self._object_id),
+                property_name=root_field,
                 value=convert_to_value(value_to_send),
             )
         )
@@ -114,7 +110,7 @@ class GRPCPropertiesModel(DataclassModel):
                 self,
                 "_handle_property_added",
                 Qt.QueuedConnection,
-                Q_ARG(str, change.added.property),
+                Q_ARG(str, change.added.property_name),
                 Q_ARG("QVariant", change.added.value),
             )
         elif change.HasField("removed"):
@@ -122,14 +118,14 @@ class GRPCPropertiesModel(DataclassModel):
                 self,
                 "_handle_property_removed",
                 Qt.QueuedConnection,
-                Q_ARG(str, change.removed.property),
+                Q_ARG(str, change.removed.property_name),
             )
         elif change.HasField("updated"):
             QMetaObject.invokeMethod(
                 self,
                 "_handle_property_updated",
                 Qt.QueuedConnection,
-                Q_ARG(str, change.updated.property),
+                Q_ARG(str, change.updated.property_name),
                 Q_ARG("QVariant", change.updated.old_value),
                 Q_ARG("QVariant", change.updated.new_value),
             )

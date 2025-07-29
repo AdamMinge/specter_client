@@ -1,5 +1,6 @@
-from google.protobuf.struct_pb2 import Value, Struct
 import typing
+
+from google.protobuf.struct_pb2 import Value, Struct
 
 
 def convert_from_value(value: Value) -> typing.Any:
@@ -16,16 +17,16 @@ def convert_from_value(value: Value) -> typing.Any:
 
         if "_type" in fields:
             type_name = fields["_type"].string_value
-            plain = {k: convert_from_value(v) for k, v in fields.items() if k != "_type"}
-
-            return {
-                "_type": type_name,
-                **plain
+            plain = {
+                k: convert_from_value(v) for k, v in fields.items() if k != "_type"
             }
+
+            return {"_type": type_name, **plain}
 
         return {k: convert_from_value(v) for k, v in fields.items()}
 
     return None
+
 
 def convert_to_value(value: typing.Any) -> Value:
     v = Value()

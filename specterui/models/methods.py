@@ -9,16 +9,14 @@ from PySide6.QtCore import (
     Qt,
     QModelIndex,
     QAbstractItemModel,
-    Signal,
     QObject,
     QPersistentModelIndex,
     QSortFilterProxyModel,
 )
 
-from specterui.proto.specter_pb2 import Object, Method, MethodCall
+from specterui.proto.specter_pb2 import ObjectId, Method, MethodCall
 
 from specterui.client import Client, convert_to_value, convert_from_value
-from specterui.context import Context
 from specterui.models.utils import (
     flatten_dict_field,
     unflatten_dict_field,
@@ -117,8 +115,6 @@ class MethodListModel(QAbstractItemModel):
         AttributeNameRole = Qt.ItemDataRole.UserRole + 3
         TreeItemRole = Qt.ItemDataRole.UserRole + 4
         ButtonRole = Qt.ItemDataRole.UserRole + 5
-
-    MethodTriggered = Signal(str, object)
 
     def __init__(
         self,
@@ -452,34 +448,26 @@ class MethodListModel(QAbstractItemModel):
         item = index.internalPointer()
         if isinstance(item, MethodTreeItem):
             item.call_action()
-            self.MethodTriggered.emit(item.name, item.dataclass_instance)
 
 
 class GRPCMethodsModel(MethodListModel):
-    def __init__(self, client: Client, context: Context, parent=None):
+    def __init__(self, client: Client, parent=None):
         super().__init__(parent)
-
         self._client = client
-        self._context = context
+        self._object_id = None
 
-        self._init_connections()
-
-    def _init_connections(self):
-        self._context.current_object_changed.connect(self._on_current_object_changed)
-
-    def _on_current_object_changed(self):
+    def set_object(self, object_id: str):
+        self._object_id = object_id
         self._fetch_initial_state()
 
     def _fetch_initial_state(self):
-        if self._context.current_object is None:
+        if self._object_id is None:
             self.set_methods([])
             return False
 
         methods_data = []
         try:
-            response = self._client.object_stub.GetMethods(
-                Object(query=self._context.current_object)
-            )
+            response = self._client.object_stub.GetMethods(ObjectId(id=self._object_id))
         except Exception as e:
             self.set_methods([])
             return False
@@ -489,8 +477,10 @@ class GRPCMethodsModel(MethodListModel):
             if dataclass_instance is None:
                 continue
 
-            call_method = self._create_call_method(method.name, dataclass_instance)
-            methods_data.append((method.name, dataclass_instance, call_method))
+            call_method = self._create_call_method(
+                method.method_name, dataclass_instance
+            )
+            methods_data.append((method.method_name, dataclass_instance, call_method))
 
         self.set_methods(methods_data)
         return True
@@ -510,8 +500,8 @@ class GRPCMethodsModel(MethodListModel):
 
             self._client.object_stub.CallMethod(
                 MethodCall(
-                    object=Object(query=self._context.current_object),
-                    method=method_name,
+                    object_id=ObjectId(id=self._object_id),
+                    method_name=method_name,
                     arguments=arguments,
                 )
             )
@@ -523,7 +513,7 @@ class GRPCMethodsModel(MethodListModel):
         values = {}
 
         for parameter in method.parameters:
-            base_path = parameter.name
+            base_path = parameter.parameter_name
             base_value = convert_from_value(parameter.default_value)
 
             if base_value is None:

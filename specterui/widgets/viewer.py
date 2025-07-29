@@ -1,5 +1,3 @@
-import typing
-
 from PySide6.QtWidgets import (
     QSizePolicy,
     QWidget,
@@ -9,21 +7,20 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QPixmap
 from PySide6.QtCore import Qt, QByteArray
 
-from specterui.proto.specter_pb2 import Object
+from specterui.proto.specter_pb2 import ObjectId
 
 from specterui.client import Client, StreamReader
-from specterui.context import Context
 
 
 class ViewerWidget(QWidget):
-    def __init__(self, client: Client, context: Context):
+    def __init__(self, client: Client):
         super().__init__()
         self._client = client
-        self._context = context
         self._stream_reader = None
         self._current_pixmap = QPixmap()
+        self._object_id = None
         self._init_ui()
-        self._init_connection()
+        self.setWindowTitle("Viewer")
 
     def _init_ui(self):
         self.layout = QVBoxLayout()
@@ -35,24 +32,7 @@ class ViewerWidget(QWidget):
 
         self.setLayout(self.layout)
 
-    def _init_connection(self):
-        self._context.current_object_changed.connect(self._on_current_object_changed)
-
-    def _on_current_object_changed(self):
-        if self._stream_reader:
-            self._stream_reader.stop()
-
-        if self._context.current_object is not None:
-            self._stream_reader = StreamReader(
-                stream=self._client.preview_stub.ListenPreview(
-                    Object(query=self._context.current_object)
-                ),
-                on_data=self.display_image,
-            )
-        else:
-            self._stream_reader = None
-
-    def display_image(self, preview_message):
+    def _display_image(self, preview_message):
         if not hasattr(preview_message, "image") or not preview_message.image:
             self._image_label.setText("No image data received.")
             self._current_pixmap = QPixmap()
@@ -84,6 +64,22 @@ class ViewerWidget(QWidget):
         )
         self._image_label.setPixmap(scaled_pixmap)
         self._image_label.setText("")
+
+    def set_object(self, object_id: str):
+        self._object_id = object_id
+
+        if self._stream_reader:
+            self._stream_reader.stop()
+
+        if self._object_id is not None:
+            self._stream_reader = StreamReader(
+                stream=self._client.preview_stub.ListenPreview(
+                    ObjectId(id=self._object_id)
+                ),
+                on_data=self._display_image,
+            )
+        else:
+            self._stream_reader = None
 
     def resizeEvent(self, event):
         super().resizeEvent(event)

@@ -1,4 +1,6 @@
-from specterui.models.objects import GRPCObjectsModel
+from specterui.models.objects import (
+    GRPCObjectsModel,
+)
 from specterui.models.properties import (
     GRPCPropertiesModel,
     FilteredPropertiesTypeProxyModel,

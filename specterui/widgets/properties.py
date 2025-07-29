@@ -1,5 +1,3 @@
-import typing
-
 from PySide6.QtWidgets import (
     QDockWidget,
     QWidget,
@@ -11,7 +9,6 @@ from PySide6.QtWidgets import (
 from pyside6_utils.widgets import DataClassTreeView
 
 from specterui.client import Client
-from specterui.context import Context
 from specterui.models import (
     GRPCPropertiesModel,
     FilteredPropertiesTypeProxyModel,
@@ -19,14 +16,13 @@ from specterui.models import (
 
 
 class PropertiesDock(QDockWidget):
-    def __init__(self, client: Client, context: Context):
+    def __init__(self, client: Client):
         super().__init__("Properties")
         self._client = client
-        self._context = context
         self._init_ui()
 
     def _init_ui(self):
-        self._model = GRPCPropertiesModel(self._client, self._context)
+        self._model = GRPCPropertiesModel(self._client)
         self._proxy_model = FilteredPropertiesTypeProxyModel()
         self._proxy_model.setSourceModel(self._model)
         self._view = DataClassTreeView()
@@ -43,3 +39,8 @@ class PropertiesDock(QDockWidget):
         layout.addWidget(self._view)
         container.setLayout(layout)
         self.setWidget(container)
+
+    def set_object(self, object_id: str):
+        self._proxy_model.setSourceModel(None)
+        self._model.set_object(object_id)
+        self._proxy_model.setSourceModel(self._model)

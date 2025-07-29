@@ -14,6 +14,7 @@ class ToolBar(QToolBar):
         self._client = client
         self._init_ui()
         self._init_connnection()
+        self.setWindowTitle("Tools")
 
     def _init_ui(self):
         self._action_grid_view = QAction(

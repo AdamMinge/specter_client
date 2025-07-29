@@ -5,62 +5,70 @@ import "google/protobuf/struct.proto";
 
 package specter_proto;
 
-// -------------------------------- Previewer ------------------------------- //
+// ----------------------------- PreviewerService ---------------------------- //
 
 service PreviewerService {
-    rpc ListenPreview (Object) returns (stream PreviewImage) {}
+    rpc ListenPreview (ObjectId) returns (stream PreviewImage) {}
 }
 
-message PreviewImage {
-    bytes image = 1;
-}
-
-// --------------------------------- Marker --------------------------------- //
+// ------------------------------ MarkerService ------------------------------ //
 
 service MarkerService {
     rpc Start (google.protobuf.Empty) returns (google.protobuf.Empty) {}
     rpc Stop (google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }
 
-// --------------------------------- Recorder -------------------------------- //
+// ----------------------------- RecorderService ----------------------------- //
 
 service RecorderService {
     rpc ListenCommands (google.protobuf.Empty) returns (stream RecorderCommand) {}
 }
 
-message RecorderCommand {
-    string command = 1;
-}
-
-// --------------------------------- Object ---------------------------------- //
+// ----------------------------- ObjectService ------------------------------- //
 
 service ObjectService {
-    rpc GetTree (OptionalObject) returns (ObjectTree) {}
-    rpc Find (Object) returns (Objects) {}
+    rpc GetTree (OptionalObjectId) returns (ObjectTree) {}
+    rpc Find (ObjectSearchQuery) returns (ObjectIds) {}
 
-    rpc GetParent (Object) returns (Object) {}
-    rpc GetChildren (Object) returns (Objects) {}
+    rpc GetObjectQuery (ObjectId) returns (ObjectSearchQuery) {}
+
+    rpc GetParent (ObjectId) returns (ObjectId) {}
+    rpc GetChildren (ObjectId) returns (ObjectIds) {}
 
     rpc CallMethod (MethodCall) returns (google.protobuf.Empty) {}
     rpc UpdateProperty (PropertyUpdate) returns (google.protobuf.Empty) {}
 
-    rpc GetMethods (Object) returns (Methods) {}
-    rpc GetProperties (Object) returns (Properties) {}
+    rpc GetMethods (ObjectId) returns (Methods) {}
+    rpc GetProperties (ObjectId) returns (Properties) {}
 
-    rpc ListenTreeChanges (google.protobuf.Empty) returns (stream ObjectChange) {}
-    rpc ListenPropertiesChanges (Object) returns (stream PropertyChange) {}
+    rpc ListenTreeChanges (google.protobuf.Empty) returns (stream TreeChange) {}
+    rpc ListenPropertiesChanges (ObjectId) returns (stream PropertyChange) {}
 }
 
-message OptionalObject {
-    optional string query = 1;
+// -------------------------------- Messages --------------------------------- //
+
+message ObjectId {
+    string id = 1;
 }
 
-message Object {
+message OptionalObjectId {
+    optional string id = 1;
+}
+
+message ObjectIds {
+    repeated ObjectId ids = 1;
+}
+
+message ObjectSearchQuery {
     string query = 1;
 }
 
-message Objects {
-    repeated Object objects = 1;
+message PreviewImage {
+    bytes image = 1;
+}
+
+message RecorderCommand {
+    string command = 1;
 }
 
 message ObjectTree {
@@ -68,19 +76,19 @@ message ObjectTree {
 }
 
 message ObjectNode {
-    Object object = 1;
+    ObjectId object_id = 1;
     repeated ObjectNode children = 2;
 }
 
 message MethodCall {
-    Object object = 1;
-    string method = 2;
+    ObjectId object_id = 1;
+    string method_name = 2;
     repeated google.protobuf.Value arguments = 3;
 }
 
 message PropertyUpdate {
-    Object object = 1;
-    string property = 2;
+    ObjectId object_id = 1;
+    string property_name = 2;
     google.protobuf.Value value = 3;
 }
 
@@ -89,12 +97,12 @@ message Methods {
 }
 
 message Method {
-    string name = 1;
+    string method_name = 1;
     repeated Parameter parameters = 2;
 }
 
 message Parameter {
-    string name = 1;
+    string parameter_name = 1;
     google.protobuf.Value default_value = 2;
 }
 
@@ -103,12 +111,12 @@ message Properties {
 }
 
 message Property {
-    string name = 1;
+    string property_name = 1;
     google.protobuf.Value value = 2;
     bool read_only = 3;
 }
 
-message ObjectChange {
+message TreeChange {
     oneof change_type {
         ObjectAdded added = 1;
         ObjectRemoved removed = 2;
@@ -118,22 +126,22 @@ message ObjectChange {
 }
 
 message ObjectAdded {
-    Object object = 1;
-    Object parent = 2;
+    ObjectId object_id  = 1;
+    ObjectId parent_id  = 2;
 }
 
 message ObjectRemoved {
-    Object object = 1;
+    ObjectId object_id  = 1;
 }
 
 message ObjectReparented {
-    Object object = 1;
-    Object parent = 2;
+    ObjectId object_id  = 1;
+    ObjectId parent_id  = 2;
 }
 
 message ObjectRenamed {
-    Object old_object = 1;
-    Object new_object = 2;
+    ObjectId object_id  = 1;
+    ObjectSearchQuery object_query = 2;
 }
 
 message PropertyChange {
@@ -145,17 +153,17 @@ message PropertyChange {
 }
 
 message PropertyAdded {
-    string property = 1;
+    string property_name = 1;
     google.protobuf.Value value = 2;
     bool read_only = 3;
 }
 
 message PropertyRemoved {
-    string property = 1;
+    string property_name = 1;
 }
 
 message PropertyUpdated {
-    string property = 1;
+    string property_name  = 1;
     google.protobuf.Value old_value = 2;
     google.protobuf.Value new_value = 3;
 }
