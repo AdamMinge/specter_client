@@ -471,6 +471,9 @@ class DebuggerThread(QThread, bdb.Bdb):
 
         self._filename = "<string>"
         self._source_string = ""
+        self._source_lines = []
+        self._enter_frame = None
+
         self._globals_dict = {}
         self._locals_dict = {}
 
@@ -485,18 +488,21 @@ class DebuggerThread(QThread, bdb.Bdb):
         self._original_stderr = sys.stderr
         self._captured_output = io.StringIO()
 
+    def _populate_linecache(self):
+        if self._source_string and self._source_lines:
+            linecache.cache[self._filename] = (
+                len(self._source_string),
+                0,
+                self._source_lines,
+                self._filename,
+            )
+
     @Slot(str)
     def set_source(self, source_string: str):
         self.clear_all_breakpoints()
         self._source_string = source_string
-
-        source_lines = self._source_string.splitlines(keepends=True)
-        linecache.cache[self._filename] = (
-            len(self._source_string),
-            0,
-            source_lines,
-            self._filename,
-        )
+        self._source_lines = self._source_string.splitlines(keepends=True)
+        self._populate_linecache()
 
     @Slot(dict, dict)
     def set_context(self, globals_dict: dict, locals_dict: dict):
@@ -557,6 +563,7 @@ class DebuggerThread(QThread, bdb.Bdb):
 
     @Slot(int)
     def set_breakpoint(self, lineno: int):
+        self._populate_linecache()
         result = self.set_break(self._filename, lineno)
         if result is None:
             self.breakpoint_toggled.emit(lineno, True)
