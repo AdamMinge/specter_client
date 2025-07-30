@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import (
     Qt,
+    QObject,
     QMetaObject,
     QRegularExpression,
     QSize,
@@ -457,6 +458,17 @@ class CodeEditor(QPlainTextEdit):
         )
 
 
+class CustomStream(QObject):
+    text_written = Signal(str)
+
+    def write(self, text):
+        if text:
+            self.text_written.emit(text)
+
+    def flush(self):
+        pass
+
+
 class DebuggerThread(QThread, bdb.Bdb):
     code_started = Signal()
     code_finished = Signal(str)
@@ -486,7 +498,12 @@ class DebuggerThread(QThread, bdb.Bdb):
 
         self._original_stdout = sys.stdout
         self._original_stderr = sys.stderr
-        self._captured_output = io.StringIO()
+
+        self._custom_stdout = CustomStream()
+        self._custom_stderr = CustomStream()
+
+        self._custom_stdout.text_written.connect(self.output_received.emit)
+        self._custom_stderr.text_written.connect(self.output_received.emit)
 
     def _populate_linecache(self):
         if self._source_string and self._source_lines:
@@ -514,8 +531,8 @@ class DebuggerThread(QThread, bdb.Bdb):
         self._is_paused = False
 
         self._captured_output = io.StringIO()
-        sys.stdout = self._captured_output
-        sys.stderr = self._captured_output
+        sys.stdout = self._custom_stdout
+        sys.stderr = self._custom_stderr
 
         self.code_started.emit()
         result_status = "error"
@@ -534,7 +551,6 @@ class DebuggerThread(QThread, bdb.Bdb):
             sys.stdout = self._original_stdout
             sys.stderr = self._original_stderr
 
-            self.output_received.emit(self._captured_output.getvalue())
             self.code_finished.emit(result_status)
 
             self._pause_mutex.lock()
@@ -755,10 +771,10 @@ class EditorDock(QDockWidget):
         self._debugger.continue_execution()
 
     def _on_code_started(self):
-        self._output_console.append("--- Code Execution Started ---")
+        self._output_console.append("--- Code Execution Started ---\n")
 
     def _on_code_finished(self, status: str):
-        self._output_console.append(f"--- Code Execution Finished ({status}) ---")
+        self._output_console.append(f"--- Code Execution Finished ({status}) ---\n")
         self._update_states(running=False, paused=False)
         self._code_editor.clear_highlighting()
 
