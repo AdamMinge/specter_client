@@ -39,6 +39,7 @@ from PySide6.QtGui import (
     QFontMetrics,
     QFontDatabase,
     QTextCursor,
+    QPalette,
     QIcon,
     QPixmap,
     QPen,
@@ -529,6 +530,7 @@ class DebuggerThread(QThread, bdb.Bdb):
     def run(self):
         self._stop_requested = False
         self._is_paused = False
+        self._error_already_reported = False
 
         self._captured_output = io.StringIO()
         sys.stdout = self._custom_stdout
@@ -544,8 +546,12 @@ class DebuggerThread(QThread, bdb.Bdb):
         except bdb.BdbQuit:
             result_status = "stopped"
         except Exception:
-            error_msg = traceback.format_exc()
-            self.error_occurred.emit(f"Runtime Error:\n{error_msg}")
+            if not self._error_already_reported:
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                formatted_traceback = self._format_user_traceback(
+                    exc_type, exc_value, exc_traceback
+                )
+                self.error_occurred.emit(f"Runtime Error:\n{formatted_traceback}")
             result_status = "error"
         finally:
             sys.stdout = self._original_stdout
@@ -605,7 +611,7 @@ class DebuggerThread(QThread, bdb.Bdb):
             self._current_frame = frame
             self.current_line_changed.emit(lineno)
 
-            if self.is_break(filename, lineno):
+            if self._is_break(filename, lineno):
                 self._pause_mutex.lock()
                 self._is_paused = True
                 while self._is_paused and not self._stop_requested:
@@ -616,35 +622,51 @@ class DebuggerThread(QThread, bdb.Bdb):
                     raise bdb.BdbQuit
 
     def user_exception(self, frame, exc_info):
-        self.error_occurred.emit(
-            f"Exception at line {frame.f_lineno}: {exc_info[0].__name__}: {exc_info[1]}"
-        )
+        if not self._error_already_reported:
+            formatted_traceback = self._format_user_traceback(
+                exc_info[0], exc_info[1], exc_info[2]
+            )
+            self.error_occurred.emit(f"Exception in user code:\n{formatted_traceback}")
+            self._error_already_reported = True
 
-    def is_break(self, filename, lineno):
+    def _is_break(self, filename, lineno):
         breaks_for_file = self.get_all_breaks().get(filename)
         return breaks_for_file is not None and lineno in breaks_for_file
 
+    def _format_user_traceback(self, exc_type, exc_value, exc_traceback):
+        formatted_lines = ["Traceback (most recent call last):"]
+        extracted_tb = traceback.extract_tb(exc_traceback)
+
+        user_code_frames = []
+        for frame_summary in extracted_tb:
+            if self.canonic(frame_summary.filename) == self._filename:
+                user_code_frames.append(frame_summary)
+
+        if not user_code_frames:
+            user_code_frames = extracted_tb
+
+        for frame_summary in user_code_frames:
+            formatted_lines.append(
+                f'  File "{frame_summary.filename}", line {frame_summary.lineno}, in {frame_summary.name}'
+            )
+            if frame_summary.line:
+                formatted_lines.append(f"    {frame_summary.line.strip()}")
+
+        formatted_lines.append(f"{exc_type.__name__}: {exc_value}")
+
+        return "\n".join(formatted_lines)
+
 
 class EditorDock(QDockWidget):
+    CONSOLE_BG_COLOR = QColor("#282c34")
+    CONSOLE_TEXT_COLOR = QColor("#abb2bf")
+    ERROR_TEXT_COLOR = QColor("#e06c75")
+
     def __init__(self, client=None):
         super().__init__("Editor")
         self._client = client
 
         self._init_ui()
-
-        default_code = (
-            "print('Starting execution...')\n"
-            "def greet(name):\n"
-            "    message = f'Hello, {name}!'\n"
-            "    print(message)\n"
-            "    return message\n"
-            "result = greet('World')\n"
-            "for i in range(3):\n"
-            "    print(f'Loop iteration {i+1}')\n"
-            "print('Execution finished.')\n"
-        )
-        self._code_editor.setPlainText(default_code)
-
         self._init_connections()
         self._create_debugger()
 
@@ -676,6 +698,19 @@ class EditorDock(QDockWidget):
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.MinimumExpanding
         )
         self._output_console.setFixedHeight(150)
+
+        palette = self._output_console.palette()
+        palette.setColor(QPalette.ColorRole.Base, EditorDock.CONSOLE_BG_COLOR)
+        palette.setColor(QPalette.ColorRole.Text, EditorDock.CONSOLE_TEXT_COLOR)
+        palette.setColor(
+            QPalette.ColorRole.PlaceholderText, EditorDock.CONSOLE_TEXT_COLOR
+        )
+
+        self._output_console.setPalette(palette)
+
+        font = QFont("Consolas")
+        self._output_console.setFont(font)
+
         main_layout.addWidget(self._output_console)
 
         self.setWidget(main_widget)
@@ -789,7 +824,26 @@ class EditorDock(QDockWidget):
         )
 
     def _on_error_occurred(self, error_msg: str):
-        self._output_console.append(f"\n--- ERROR ---\n{error_msg}")
+        cursor = self._output_console.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.End)
+
+        error_format = QTextCharFormat()
+        error_format.setForeground(EditorDock.ERROR_TEXT_COLOR)
+        error_format.setFontWeight(QFont.Bold)
+
+        cursor.insertBlock()
+        cursor.setCharFormat(error_format)
+        cursor.insertText("--- ERROR ---")
+
+        cursor.insertBlock()
+        cursor.insertText(f"{error_msg}\n")
+
+        cursor.movePosition(QTextCursor.MoveOperation.End)
+        default_format = QTextCharFormat()
+        cursor.setCharFormat(default_format)
+
+        self._output_console.setTextCursor(cursor)
+
         self._output_console.verticalScrollBar().setValue(
             self._output_console.verticalScrollBar().maximum()
         )
