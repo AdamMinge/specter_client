@@ -35,9 +35,12 @@ from PySide6.QtGui import (
     QColor,
     QPainter,
     QTextFormat,
+    QFontMetrics,
+    QFontDatabase,
     QTextCursor,
     QIcon,
     QPixmap,
+    QPen,
 )
 
 from specterui.client import Client
@@ -240,13 +243,20 @@ class LineNumberArea(QWidget):
     try_add_breakpoint = Signal(int)
     try_remove_breakpoint = Signal(int)
 
+    _BREAKPOINT_COLOR = QColor(200, 0, 0)
+    _BREAKPOINT_OUTLINE_COLOR = QColor(120, 0, 0)
+    _BREAKPOINT_OUTLINE_WIDTH = 1.5
+    _LINE_NUMBER_COLOR = QColor(100, 100, 100)
+    _BACKGROUND_COLOR = QColor(240, 240, 240)
+    _ICON_NUMBER_SPACING = 8
+
     def __init__(self, editor):
         super().__init__(editor)
         self._editor = editor
 
         self.breakpoints: set[int] = set()
         self.icon_margin: int = 5
-        self.icon_radius: int = self.fontMetrics().height() / 4
+        self.icon_radius: int = int(self.fontMetrics().height() / 3.5)
         self.number_right_margin: int = 5
 
     def sizeHint(self):
@@ -254,7 +264,7 @@ class LineNumberArea(QWidget):
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        painter.fillRect(event.rect(), QColor(Qt.GlobalColor.lightGray))
+        painter.fillRect(event.rect(), self._BACKGROUND_COLOR)
 
         block = self._editor.firstVisibleBlock()
         blockNumber = block.blockNumber()
@@ -268,8 +278,13 @@ class LineNumberArea(QWidget):
         while block.isValid() and top <= event.rect().bottom():
             if block.isVisible() and bottom >= event.rect().top():
                 if blockNumber in self.breakpoints:
-                    painter.setBrush(QColor(255, 0, 0))
-                    painter.setPen(Qt.PenStyle.NoPen)
+                    painter.setBrush(self._BREAKPOINT_COLOR)
+                    painter.setPen(
+                        QPen(
+                            self._BREAKPOINT_OUTLINE_COLOR,
+                            self._BREAKPOINT_OUTLINE_WIDTH,
+                        )
+                    )
 
                     center_x = self.icon_margin + self.icon_radius
                     center_y = top + self.fontMetrics().height() / 2
@@ -282,7 +297,7 @@ class LineNumberArea(QWidget):
                     )
 
                 number = str(blockNumber + 1)
-                painter.setPen(QColor(Qt.GlobalColor.black))
+                painter.setPen(self._LINE_NUMBER_COLOR)
 
                 text_width = self.fontMetrics().horizontalAdvance(number)
                 painter.drawText(
@@ -333,11 +348,19 @@ class CodeEditor(QPlainTextEdit):
     try_add_breakpoint = Signal(int)
     try_remove_breakpoint = Signal(int)
 
+    _HIGHLIGHT_COLOR = QColor(230, 240, 255)
+    _TAB_SPACES = 4
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._lineNumberArea = LineNumberArea(self)
         self._highlighter = PythonHighlighter(self.document())
         self._highlighted_line_block = None
+
+        self.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
+        self.setTabStopDistance(
+            QFontMetrics(self.font()).horizontalAdvance(" ") * self._TAB_SPACES
+        )
 
         self.blockCountChanged.connect(self.update_line_number_area_width)
         self.updateRequest.connect(self.update_line_number_area)
@@ -346,10 +369,9 @@ class CodeEditor(QPlainTextEdit):
         self.update_line_number_area_width(0)
 
         self.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
-        self.setTabStopDistance(20)
 
         self._executed_line_highlight_format = QTextCharFormat()
-        self._executed_line_highlight_format.setBackground(QColor(220, 255, 220))
+        self._executed_line_highlight_format.setBackground(self._HIGHLIGHT_COLOR)
 
         self._lineNumberArea.try_add_breakpoint.connect(self.try_add_breakpoint)
         self._lineNumberArea.try_remove_breakpoint.connect(self.try_remove_breakpoint)
@@ -366,7 +388,7 @@ class CodeEditor(QPlainTextEdit):
         total_width = (
             self._lineNumberArea.icon_margin
             + icon_diameter
-            + 5
+            + self._lineNumberArea._ICON_NUMBER_SPACING
             + number_width
             + self._lineNumberArea.number_right_margin
         )
@@ -412,6 +434,8 @@ class CodeEditor(QPlainTextEdit):
         if block.isValid():
             self._highlighted_line_block = block
             self.highlight_current_line()
+            cursor = QTextCursor(block)
+            self.setTextCursor(cursor)
             self.ensureCursorVisible()
 
     def add_breakpoint(self, breakpoint):
