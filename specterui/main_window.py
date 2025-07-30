@@ -10,7 +10,6 @@ from specterui.widgets import (
     ObjectsDock,
     PropertiesDock,
     RecorderDock,
-    TerminalDock,
     EditorDock,
     ViewerWidget,
     ToolBar,
@@ -32,7 +31,6 @@ class MainWindow(QMainWindow):
         self._objects_dock = ObjectsDock(self._client)
         self._properties_dock = PropertiesDock(self._client)
         self._methods_dock = MethodsDock(self._client)
-        self._terminal_dock = TerminalDock(self._client)
         self._recorder_dock = RecorderDock(self._client)
         self._editor_dock = EditorDock(self._client)
         self._viewer_widget = ViewerWidget(self._client)
@@ -41,12 +39,10 @@ class MainWindow(QMainWindow):
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self._objects_dock)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self._properties_dock)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self._methods_dock)
-        self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._terminal_dock)
         self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._recorder_dock)
         self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._editor_dock)
 
         self.tabifyDockWidget(self._methods_dock, self._properties_dock)
-        self.tabifyDockWidget(self._terminal_dock, self._recorder_dock)
         self.tabifyDockWidget(self._recorder_dock, self._editor_dock)
 
         self._toolbar = ToolBar(self._client)
