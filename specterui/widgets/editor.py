@@ -1,9 +1,7 @@
-import linecache
 import builtins
 import traceback
 import bdb
 import sys
-import io
 
 from PySide6.QtWidgets import (
     QDockWidget,
@@ -485,13 +483,11 @@ class DebuggerThread(QThread, bdb.Bdb):
         self._filename = "<string>"
         self._source_string = ""
         self._source_lines = []
-        self._enter_frame = None
 
         self._globals_dict = {}
         self._locals_dict = {}
 
         self._stop_requested = False
-        self._current_frame = None
 
         self._pause_mutex = QMutex()
         self._pause_condition = QWaitCondition()
@@ -508,6 +504,9 @@ class DebuggerThread(QThread, bdb.Bdb):
 
     def _populate_linecache(self):
         if self._source_string and self._source_lines:
+
+            import linecache
+
             linecache.cache[self._filename] = (
                 len(self._source_string),
                 0,
@@ -532,7 +531,6 @@ class DebuggerThread(QThread, bdb.Bdb):
         self._is_paused = False
         self._error_already_reported = False
 
-        self._captured_output = io.StringIO()
         sys.stdout = self._custom_stdout
         sys.stderr = self._custom_stderr
 
@@ -540,8 +538,9 @@ class DebuggerThread(QThread, bdb.Bdb):
         result_status = "error"
 
         try:
-            self.set_trace()
-            exec(self._source_string, self._globals_dict, self._locals_dict)
+            bdb.Bdb.run(
+                self, self._source_string, self._globals_dict, self._locals_dict
+            )
             result_status = "success"
         except bdb.BdbQuit:
             result_status = "stopped"
@@ -608,7 +607,6 @@ class DebuggerThread(QThread, bdb.Bdb):
         lineno = frame.f_lineno
 
         if self._filename == filename:
-            self._current_frame = frame
             self.current_line_changed.emit(lineno)
 
             if self._is_break(filename, lineno):
@@ -623,10 +621,22 @@ class DebuggerThread(QThread, bdb.Bdb):
 
     def user_exception(self, frame, exc_info):
         if not self._error_already_reported:
-            formatted_traceback = self._format_user_traceback(
-                exc_info[0], exc_info[1], exc_info[2]
+            exc_type, exc_value, exc_traceback = exc_info
+
+            is_builtin_type_error = (
+                isinstance(exc_value, TypeError)
+                and "is a built-in module" in str(exc_value)
+                and "getfile" in "".join(traceback.format_tb(exc_traceback))
             )
-            self.error_occurred.emit(f"Exception in user code:\n{formatted_traceback}")
+
+            if is_builtin_type_error:
+                self._error_already_reported = True
+                return
+
+            formatted_traceback = self._format_user_traceback(
+                exc_type, exc_value, exc_traceback
+            )
+            print(f"Exception in user code:\n{formatted_traceback}")
             self._error_already_reported = True
 
     def _is_break(self, filename, lineno):
@@ -748,14 +758,7 @@ class EditorDock(QDockWidget):
         if getattr(self, "_debugger", None) and self._debugger.isRunning():
             self._debugger.stop_execution()
             self._debugger.wait()
-            self._debugger.code_started.disconnect(self._on_code_started)
-            self._debugger.code_finished.disconnect(self._on_code_finished)
-            self._debugger.current_line_changed.disconnect(
-                self._on_current_line_changed
-            )
-            self._debugger.output_received.disconnect(self._on_output_received)
-            self._debugger.error_occurred.disconnect(self._on_error_occurred)
-            self._debugger.breakpoint_toggled.disconnect(self._on_breakpoint_toggled)
+            self._debugger.deleteLater()
             self._debugger = None
 
         self._debugger = DebuggerThread(self)
@@ -792,6 +795,7 @@ class EditorDock(QDockWidget):
         globals_context = {
             "__builtins__": builtins,
         }
+
         return globals_context
 
     def _get_locals_context(self):
