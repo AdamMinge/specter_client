@@ -1,6 +1,6 @@
 import time
 
-from specterui.proto.specter_pb2 import Object
+from specterui.proto.specter_pb2 import ObjectQuery
 
 from specterui.client import Client
 from specterui.scripts.wrappers import ObjectWrapper
@@ -11,8 +11,8 @@ class Module:
         super().__init__()
         self._client = client
 
-    def waitForObject(self, object_json_query, timeout=10):
-        object_pb_request = Object(query=object_json_query)
+    def waitForObject(self, object_query, timeout=10):
+        object_pb_request = ObjectQuery(query=object_query)
 
         start_time = time.time()
         while time.time() - start_time < timeout:
@@ -26,5 +26,5 @@ class Module:
             time.sleep(0.5)
 
         raise TimeoutError(
-            f"Object matching query '{object_json_query}' not found within {timeout} seconds."
+            f"Object matching query '{object_query}' not found within {timeout} seconds."
         )
