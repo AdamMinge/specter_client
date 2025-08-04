@@ -1,0 +1,9 @@
+import os
+
+from PySide6.QtNetwork import QHostAddress
+
+SPECTER_VIEWER_SERVER_HOST = QHostAddress(
+    os.environ.get("SPECTER_VIEWER_SERVER_HOST", "127.0.0.1")
+)
+SPECTER_VIEWER_SERVER_PORT = int(os.environ.get("SPECTER_VIEWER_SERVER_PORT", "5010"))
+SPECTER_VIEVER_SERVER_DLL = str(os.environ.get("SPECTER_VIEVER_SERVER_DLL"))

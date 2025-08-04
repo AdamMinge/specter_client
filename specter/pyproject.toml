@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "specter"
+version = "0.1.0"
+description = "Core specter module"
+authors = ["Adam Minge <minge.adam@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.14"
+tomlkit = "^0.5.4"
+pyinjector = "^1.3"
+protobuf = "5.29.4"
+grpcio = "1.71.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
