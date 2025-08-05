@@ -1,6 +1,6 @@
 import time
 
-from specter.proto.specter_pb2 import ObjectQuery
+from specter.proto.specter_pb2 import ObjectSearchQuery
 
 from specter.client import Client
 from specter.scripts.wrappers import ObjectWrapper
@@ -12,7 +12,7 @@ class ScriptModule:
         self._client = client
 
     def waitForObject(self, object_query, timeout=10):
-        object_pb_request = ObjectQuery(query=object_query)
+        object_pb_request = ObjectSearchQuery(query=object_query)
 
         start_time = time.time()
         while time.time() - start_time < timeout:

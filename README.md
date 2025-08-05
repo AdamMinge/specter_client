@@ -45,12 +45,10 @@
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
         <li><a href="#installation">Installation</a></li>
-        <li><a href="#initialize-modules">Initialize Modules</a></li>
         <li><a href="#build-modules">Build Modules</a></li>
         <li><a href="#deploy-modules">Deploy Modules</a></li>
       </ul>
     </li>
-    <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
@@ -62,11 +60,16 @@
 
 specter_client is modular toolkit for interacting with Qt applications instrumented by the Specter DLL.
 
-- <b>specter</b> - Core client and scripting engine. Provides the low-level API for connecting to and communicating with Specter-instrumented Qt applications over gRPC. Enables scripting, test automation, and programmatic interaction.
 
-- <b>specter_viewer</b> - A PySide6-based GUI application for visual inspection, object hierarchy browsing, property editing, method invocation, and test authoring. Acts as the visual control center for live applications.
 
-- <b>specter_debugger</b> - A command-line-oriented module used to run scripted automation scenarios against Specter targets. Useful for continuous integration, regression testing, and non-interactive debugging.
+- <a href="/specter/README.md"><strong>Specter</strong></a> - 
+Core client and scripting engine. Provides the low-level API for connecting to and communicating with Specter-instrumented Qt applications over gRPC. Enables scripting, test automation, and programmatic interaction.
+
+- <a href="/specter_viewer/README.md"><strong>Specter Viewer</strong></a> - 
+A PySide6-based GUI application for visual inspection, object hierarchy browsing, property editing, method invocation, and test authoring. Acts as the visual control center for live applications.
+
+- <a href="/specter_debugger/README.md"><strong>Specter Debugger</strong></a> - 
+A command-line-oriented module used to run scripted automation scenarios against Specter targets. Useful for continuous integration, regression testing, and non-interactive debugging.
 
 Together, these modules enable:
 - Injection of the Specter DLL into live or launchable Qt processes
@@ -97,11 +100,12 @@ This guide explains how to set up and deploy the specter_client project locally 
 
 Make sure you have the following installed:
 - Python 3.12
-- Poetry
+- Poetry (With Monorepo Plugin)
 
-To install Poetry:
+To install Poetry and add require plugin:
 ```sh
 pip install poetry
+poetry self add poetry-monorepo-dependency-plugin
 ```
 
 ### Installation
@@ -111,24 +115,6 @@ git clone https://github.com/AdamMinge/specter_client.git
 cd specter_client
 poetry install
 ```
-
-### Initialize Modules
-Set up deployment configurations for all modules that contain an entry point (\_\_main\_\_.py).
-```sh
-poetry run init
-```
-This command scans your project for modules prepared for deployment (e.g. specter_viewer, specter_debugger) and generates a pyside6deploy.spec file for each one using pyside6-deploy.
-
-These configuration files define how each application will be packaged. After initialization, make sure to customize the following fields in each module’s pyside6deploy.spec:
-
-For each deploying module update following fileds in pyside6deploy.spec:
-```sh
-[app]
-title = "SpecterViewer"               # Set your app's name
-exec_directory = "../.build/bin"      # Output path for the built executable
-icon = "../images/logo.png"           # Path to your app icon (optional)
-```
-_These settings control the final appearance and structure of the deployed applicatio_
 
 ### Build Modules
 Compile all necessary resources for each module, including:
@@ -145,27 +131,6 @@ Package and deploy each module into distributable executables.
 poetry run deploy
 ```
 _This command creates deployment configs and builds the final executables for your modules, ready for distribution or testing._
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- ROADMAP -->
-## Roadmap
-
-- [x] Objects Dock
-  - [x] Display object hierarchy
-- [x] Properties Dock
-  - [x] Display selected object properties
-  - [x] Edit object properties
-- [X] Methods Dock
-  - [X] Display available methods of selected object
-  - [X] Call selected method with parameters
-- [ ] Editor Dock
-  - [ ] Python code editor
-  - [ ] Calling test code
-  - [ ] Debugging test code
-
-
-See the [open issues](https://github.com/AdamMinge/specter_client/issues) for a full list of proposed features (and known issues).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

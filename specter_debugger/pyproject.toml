@@ -1,13 +1,14 @@
 [tool.poetry]
 name = "specter_debugger"
 version = "0.1.0"
-description = "Debugger for specter"
+description = ""
 authors = ["Adam Minge <minge.adam@gmail.com>"]
+
+[tool.poetry-monorepo.deps]
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.14"
-tomlkit = "^0.5.4"
-specter = { path = "../specter", develop = true }
+specter = {path = "../specter", develop=true}
 
 [build-system]
 requires = ["poetry-core"]

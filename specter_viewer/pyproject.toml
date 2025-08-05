@@ -1,16 +1,16 @@
 [tool.poetry]
 name = "specter_viewer"
 version = "0.1.0"
-description = "Viewer for specter"
+description = ""
 authors = ["Adam Minge <minge.adam@gmail.com>"]
+
+[tool.poetry-monorepo.deps]
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.14"
 pyside6 = "^6.9"
-psutil = "^7.0"
 pyside6-utils = "^1.2.2"
-tomlkit = "^0.5.4"
-specter = { path = "../specter", develop = true }
+specter = {path = "../specter", develop=true}
 
 [build-system]
 requires = ["poetry-core"]

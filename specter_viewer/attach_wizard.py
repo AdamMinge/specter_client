@@ -18,6 +18,8 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtCore import QSize, Slot
 
+from specter.client import Client, attach_to_existing_process, attach_to_new_process
+
 from specter_viewer import constants
 from specter_viewer.widgets import ProcessTable
 

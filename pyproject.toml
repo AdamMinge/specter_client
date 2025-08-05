@@ -1,26 +1,27 @@
-[tool.poetry]
-name = "specter"
-version = "0.1.0"
-description = "Composed of three core modules that together support testing automation, inspection, and scripting of target applications"
-authors = ["Adam Minge <minge.adam@gmail.com>"]
-
-[tool.poetry.requires-plugins]
-poetry-workspace-plugin= "^0.5.3"
-
-[tool.poetry.dependencies]
-python = "^3.10"
-
-[tool.poetry.dev-dependencies]
-grpcio-tools = "1.71.0"
-
-[tool.poetry.workspace]
-members = ["specter", "specter_viewer", "specter_debugger"]
-
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.poetry]
+name = "specter_client"
+version = "0.1.0"
+description = ""
+authors = ["Adam Minge <minge.adam@gmail.com>"]
+readme = "README.md"
+packages = [{ include = "scripts" }]
+
+[tool.poetry.plugins."poetry.plugin"]
+monorepo = "poetry_monorepo_dependency_plugin.plugin"
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.14"
+specter = { path = "./specter", develop = true }
+specter_debugger = { path = "./specter_debugger", develop = true }
+specter_viewer = { path = "./specter_viewer", develop = true }
+
+[tool.poetry.group.dev.dependencies]
+grpcio-tools = "1.71.0"
+
 [tool.poetry.scripts]
-init = "scripts.init:main"
 build = "scripts.build:main"
 deploy = "scripts.deploy:main"

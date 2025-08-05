@@ -4,14 +4,10 @@ import typing
 
 from PySide6.QtCore import (
     Qt,
-    Signal,
     QAbstractItemModel,
-    QSortFilterProxyModel,
     QModelIndex,
     QMetaObject,
     Slot,
-    QTimer,
-    QThread,
     Q_ARG,
 )
 from google.protobuf import empty_pb2
@@ -38,7 +34,7 @@ class ObjectNode:
             return self.id == other.id
         elif isinstance(other, str):
             return self.id == other
-        raise NotImplemented
+        raise NotImplementedError
 
     def child(self, row: int) -> typing.Optional["ObjectNode"]:
         return self.children[row] if 0 <= row < len(self.children) else None
