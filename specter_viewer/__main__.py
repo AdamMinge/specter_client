@@ -29,17 +29,17 @@ def attach_client(app: Application):
     args = parser.parse_args()
     if args.pid:
         return attach_to_existing_process(
-            host=constants.SPECTERUI_SERVER_HOST,
-            port=constants.SPECTERUI_SERVER_PORT,
+            host=constants.SPECTER_VIEWER_SERVER_HOST,
+            port=constants.SPECTER_VIEWER_SERVER_PORT,
             pid=args.pid,
-            library=constants.SPECTERUI_SERVER_DLL,
+            library=constants.SPECTER_VIEVER_SERVER_DLL,
         )
     elif args.app:
         return attach_to_new_process(
-            host=constants.SPECTERUI_SERVER_HOST,
-            port=constants.SPECTERUI_SERVER_PORT,
+            host=constants.SPECTER_VIEWER_SERVER_HOST,
+            port=constants.SPECTER_VIEWER_SERVER_PORT,
             app=args.app,
-            library=constants.SPECTERUI_SERVER_DLL,
+            library=constants.SPECTER_VIEVER_SERVER_DLL,
         )
 
     attach_wizard = AttachWizard()
@@ -52,6 +52,7 @@ def main():
     try:
         client = attach_client(app)
     except Exception as e:
+        print(f"e = {e}")
         sys.exit(app.exit(1))
         return
 

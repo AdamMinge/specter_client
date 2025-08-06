@@ -201,10 +201,10 @@ class AttachWizard(QWizard):
             assert selected_process
 
             return attach_to_existing_process(
-                host=constants.SPECTERUI_SERVER_HOST,
-                port=constants.SPECTERUI_SERVER_PORT,
+                host=constants.SPECTER_VIEWER_SERVER_HOST,
+                port=constants.SPECTER_VIEWER_SERVER_PORT,
                 pid=selected_process.pid,
-                library=constants.SPECTERUI_SERVER_DLL,
+                library=constants.SPECTER_VIEVER_SERVER_DLL,
             )
 
         elif self.currentId() == Pages.Page_AttachToNewProcess:
@@ -213,10 +213,10 @@ class AttachWizard(QWizard):
             assert application_path
 
             return attach_to_new_process(
-                host=constants.SPECTERUI_SERVER_HOST,
-                port=constants.SPECTERUI_SERVER_PORT,
+                host=constants.SPECTER_VIEWER_SERVER_HOST,
+                port=constants.SPECTER_VIEWER_SERVER_PORT,
                 app=application_path,
-                library=constants.SPECTERUI_SERVER_DLL,
+                library=constants.SPECTER_VIEVER_SERVER_DLL,
                 subprocess_name=subprocess_name,
             )
 
