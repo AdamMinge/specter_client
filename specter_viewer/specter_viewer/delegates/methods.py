@@ -17,7 +17,7 @@ from PySide6.QtCore import (
 )
 from PySide6.QtGui import QPainter
 
-from specter_viewer.models import MethodListModel
+from specter_viewer.models.methods import MethodsModel
 
 
 class MethodButtonDelegate(QStyledItemDelegate):
@@ -26,8 +26,8 @@ class MethodButtonDelegate(QStyledItemDelegate):
 
     def _get_base_model_and_index(
         self, current_model: QAbstractItemModel, current_index: QModelIndex
-    ) -> typing.Tuple[typing.Optional[MethodListModel], QModelIndex]:
-        if isinstance(current_model, MethodListModel):
+    ) -> typing.Tuple[typing.Optional[MethodsModel], QModelIndex]:
+        if isinstance(current_model, MethodsModel):
             return current_model, current_index
         elif isinstance(current_model, QSortFilterProxyModel):
             source_index = current_model.mapToSource(current_index)
@@ -41,9 +41,7 @@ class MethodButtonDelegate(QStyledItemDelegate):
     def paint(
         self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex
     ):
-        if index.column() == 1 and index.data(
-            MethodListModel.CustomDataRoles.ButtonRole
-        ):
+        if index.column() == 1 and index.data(MethodsModel.CustomDataRoles.ButtonRole):
             button_option = QStyleOptionButton()
             button_option.rect = option.rect
             button_option.text = index.data(Qt.ItemDataRole.DisplayRole)
@@ -67,7 +65,7 @@ class MethodButtonDelegate(QStyledItemDelegate):
     ) -> bool:
         if (
             index.column() == 1
-            and index.data(MethodListModel.CustomDataRoles.ButtonRole)
+            and index.data(MethodsModel.CustomDataRoles.ButtonRole)
             and event.type() == QEvent.Type.MouseButtonRelease
             and event.button() == Qt.MouseButton.LeftButton
         ):

@@ -15,9 +15,9 @@ monorepo = "poetry_monorepo_dependency_plugin.plugin"
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.14"
-specter = { path = "./specter", develop = true }
-specter_debugger = { path = "./specter_debugger", develop = true }
-specter_viewer = { path = "./specter_viewer", develop = true }
+specter = { path = "specter", develop = true }
+specter_debugger = { path = "specter_debugger", develop = true }
+specter_viewer = { path = "specter_viewer", develop = true }
 
 [tool.poetry.group.dev.dependencies]
 grpcio-tools = "1.71.0"

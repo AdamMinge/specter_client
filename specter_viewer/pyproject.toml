@@ -9,7 +9,6 @@ authors = ["Adam Minge <minge.adam@gmail.com>"]
 [tool.poetry.dependencies]
 python = ">=3.12,<3.14"
 pyside6 = "^6.9"
-pyside6-utils = "^1.2.2"
 specter = {path = "../specter", develop=true}
 
 [build-system]

@@ -1,4 +1,4 @@
-from specter_viewer.widgets.process_table import ProcessTable, Process
+from specter_viewer.widgets.process_table import ProcessTable
 from specter_viewer.widgets.methods import MethodsDock
 from specter_viewer.widgets.objects import ObjectsDock
 from specter_viewer.widgets.properties import PropertiesDock
@@ -9,7 +9,6 @@ from specter_viewer.widgets.toolbar import ToolBar
 
 __all__ = [
     "ProcessTable",
-    "Process",
     "MethodsDock",
     "ObjectsDock",
     "PropertiesDock",

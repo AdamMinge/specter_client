@@ -12,7 +12,6 @@ from PySide6.QtCore import (
 )
 from google.protobuf import empty_pb2
 
-from specter.proto.specter_pb2 import ObjectId, ObjectSearchQuery
 from specter.client import Client, StreamReader
 
 

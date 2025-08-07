@@ -9,7 +9,7 @@ from PySide6.QtCore import Signal, Qt, QModelIndex
 
 from specter.client import Client
 
-from specter_viewer.models import GRPCObjectsModel
+from specter_viewer.models.objects import GRPCObjectsModel
 
 
 class ObjectsDock(QDockWidget):

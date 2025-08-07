@@ -67,7 +67,7 @@ class BaseTreeItem:
         return None
 
 
-class DataclassTreeItem(BaseTreeItem):
+class PropertiesTreeItem(BaseTreeItem):
     def __init__(
         self,
         name: str,
@@ -107,7 +107,7 @@ class HasNoDefaultError(Exception):
     """Raised when a field has no default value"""
 
 
-class MethodListModel(QAbstractItemModel):
+class MethodsModel(QAbstractItemModel):
     class CustomDataRoles(enum.IntEnum):
         TypeRole = Qt.ItemDataRole.UserRole
         FieldRole = Qt.ItemDataRole.UserRole + 1
@@ -173,11 +173,11 @@ class MethodListModel(QAbstractItemModel):
         for key, value in data_hierarchy.items():
             cur_field = name_field_dict.get(key, None)
             if cur_field:
-                item = DataclassTreeItem(
+                item = PropertiesTreeItem(
                     name=key, field=cur_field, parent=parent_tree_item
                 )
             else:
-                item = DataclassTreeItem(name=key, field=None, parent=parent_tree_item)
+                item = PropertiesTreeItem(name=key, field=None, parent=parent_tree_item)
 
             if isinstance(value, dict) and len(value) > 0:
                 self._build_dataclass_sub_tree(dataclass_instance, value, item)
@@ -251,14 +251,14 @@ class MethodListModel(QAbstractItemModel):
                     return item.name
                 elif index.column() == 1:
                     return "Call"
-            elif role == MethodListModel.CustomDataRoles.ButtonRole:
+            elif role == MethodsModel.CustomDataRoles.ButtonRole:
                 if index.column() == 1:
                     return True
-            elif role == MethodListModel.CustomDataRoles.TreeItemRole:
+            elif role == MethodsModel.CustomDataRoles.TreeItemRole:
                 return item
             return None
 
-        elif isinstance(item, DataclassTreeItem):
+        elif isinstance(item, PropertiesTreeItem):
             owning_method_item = item.find_ancestor(MethodTreeItem)
             if not owning_method_item or not owning_method_item.dataclass_instance:
                 return None
@@ -302,7 +302,7 @@ class MethodListModel(QAbstractItemModel):
                 except HasNoDefaultError:
                     pass
                 return result_str
-            elif role == MethodListModel.CustomDataRoles.TypeRole:
+            elif role == MethodsModel.CustomDataRoles.TypeRole:
                 if typing.get_origin(item.field.type) is typing.Union and type(
                     None
                 ) in typing.get_args(item.field.type):
@@ -312,13 +312,13 @@ class MethodListModel(QAbstractItemModel):
                         if arg is not type(None)
                     ][0]
                 return item.field.type
-            elif role == MethodListModel.CustomDataRoles.AttributeNameRole:
+            elif role == MethodsModel.CustomDataRoles.AttributeNameRole:
                 return item.name
-            elif role == MethodListModel.CustomDataRoles.FieldRole:
+            elif role == MethodsModel.CustomDataRoles.FieldRole:
                 return item.field
-            elif role == MethodListModel.CustomDataRoles.DefaultValueRole:
+            elif role == MethodsModel.CustomDataRoles.DefaultValueRole:
                 return self.get_default_value(item.field)
-            elif role == MethodListModel.CustomDataRoles.TreeItemRole:
+            elif role == MethodsModel.CustomDataRoles.TreeItemRole:
                 return item
             elif role == Qt.ItemDataRole.FontRole:
                 try:
@@ -355,7 +355,7 @@ class MethodListModel(QAbstractItemModel):
         if isinstance(tree_item, MethodTreeItem):
             return False
 
-        if isinstance(tree_item, DataclassTreeItem):
+        if isinstance(tree_item, PropertiesTreeItem):
             if tree_item.field is None:
                 return False
 
@@ -369,7 +369,7 @@ class MethodListModel(QAbstractItemModel):
                 setattr(dataclass_instance, tree_item.name, value)
                 self.dataChanged.emit(index, index)
                 return True
-            elif role == MethodListModel.CustomDataRoles.DefaultValueRole:
+            elif role == MethodsModel.CustomDataRoles.DefaultValueRole:
                 try:
                     default_value = self.get_default_value(tree_item.field)
                     setattr(dataclass_instance, tree_item.name, default_value)
@@ -394,7 +394,7 @@ class MethodListModel(QAbstractItemModel):
         if isinstance(item, MethodTreeItem):
             return False
 
-        if isinstance(item, DataclassTreeItem) and item.field is not None:
+        if isinstance(item, PropertiesTreeItem) and item.field is not None:
             current_value = self.data(index, role)
             if current_value == value and role == Qt.ItemDataRole.EditRole:
                 return False
@@ -412,7 +412,7 @@ class MethodListModel(QAbstractItemModel):
 
         if isinstance(item, MethodTreeItem):
             return base_flags
-        elif isinstance(item, DataclassTreeItem):
+        elif isinstance(item, PropertiesTreeItem):
             if item.field is None:
                 return base_flags
             if index.column() == 0:
@@ -450,7 +450,7 @@ class MethodListModel(QAbstractItemModel):
             item.call_action()
 
 
-class GRPCMethodsModel(MethodListModel):
+class GRPCMethodsModel(MethodsModel):
     def __init__(self, client: Client, parent=None):
         super().__init__(parent)
         self._client = client
@@ -538,9 +538,9 @@ class FilteredAttributeTypeProxyModel(QSortFilterProxyModel):
         if not index.isValid():
             return True
 
-        item = index.data(MethodListModel.CustomDataRoles.TreeItemRole)
+        item = index.data(MethodsModel.CustomDataRoles.TreeItemRole)
         return not (
-            isinstance(item, DataclassTreeItem)
+            isinstance(item, PropertiesTreeItem)
             and isinstance(item.name, str)
             and item.name.endswith("type")
         )

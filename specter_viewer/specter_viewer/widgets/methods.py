@@ -13,16 +13,16 @@ from PySide6.QtCore import Qt, SignalInstance, QModelIndex, QAbstractItemModel, 
 from specter.client import Client
 
 from specter_viewer.delegates import MethodButtonDelegate
-from specter_viewer.models import (
-    MethodListModel,
-    DataclassTreeItem,
+from specter_viewer.models.methods import (
+    MethodsModel,
+    PropertiesTreeItem,
     HasNoDefaultError,
     GRPCMethodsModel,
     FilteredAttributeTypeProxyModel,
 )
 
 
-class MethodsListTreeView(QTreeView):
+class MethodsTreeView(QTreeView):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
@@ -44,14 +44,14 @@ class MethodsListTreeView(QTreeView):
         path = ()
         current_index = index
         current_item = model.data(
-            current_index, MethodListModel.CustomDataRoles.TreeItemRole
+            current_index, MethodsModel.CustomDataRoles.TreeItemRole
         )
 
         while current_item is not None and current_item.parent() is not None:
             path = (current_item.name,) + path
             current_index = current_index.parent()
             current_item = model.data(
-                current_index, MethodListModel.CustomDataRoles.TreeItemRole
+                current_index, MethodsModel.CustomDataRoles.TreeItemRole
             )
         return path
 
@@ -115,13 +115,13 @@ class MethodsListTreeView(QTreeView):
             return
 
         model = self.model()
-        item = model.data(index, MethodListModel.CustomDataRoles.TreeItemRole)
-        if isinstance(item, DataclassTreeItem) and item.field is not None:
+        item = model.data(index, MethodsModel.CustomDataRoles.TreeItemRole)
+        if isinstance(item, PropertiesTreeItem) and item.field is not None:
             try:
                 model = self.model()
-                if isinstance(model, MethodListModel):
+                if isinstance(model, MethodsModel):
                     default_val = model.data(
-                        index, MethodListModel.CustomDataRoles.DefaultValueRole
+                        index, MethodsModel.CustomDataRoles.DefaultValueRole
                     )
                     current_val = model.data(index, Qt.ItemDataRole.EditRole)
 
@@ -147,7 +147,7 @@ class MethodsListTreeView(QTreeView):
         if not index.isValid():
             return
         model = self.model()
-        model.setData(index, None, MethodListModel.CustomDataRoles.DefaultValueRole)
+        model.setData(index, None, MethodsModel.CustomDataRoles.DefaultValueRole)
 
 
 class MethodsDock(QDockWidget):
@@ -160,7 +160,7 @@ class MethodsDock(QDockWidget):
         self._model = GRPCMethodsModel(self._client)
         self._proxy_model = FilteredAttributeTypeProxyModel()
         self._proxy_model.setSourceModel(self._model)
-        self._view = MethodsListTreeView()
+        self._view = MethodsTreeView()
         self._view.setModel(self._proxy_model)
         self._view.header().setSectionResizeMode(
             QHeaderView.ResizeMode.ResizeToContents
