@@ -1,4 +1,0 @@
-from specterui.scripts.module import Module
-from specterui.scripts.wrappers import ObjectWrapper
-
-__all__ = ["Module"]

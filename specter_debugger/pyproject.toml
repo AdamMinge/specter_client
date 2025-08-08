@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "specter_debugger"
+version = "0.1.0"
+description = ""
+authors = ["Adam Minge <minge.adam@gmail.com>"]
+
+[tool.poetry-monorepo.deps]
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.14"
+specter = {path = "../specter", develop=true}
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

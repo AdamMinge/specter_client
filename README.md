@@ -9,23 +9,24 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/AdamMinge/specterUI">
+  <a href="https://github.com/AdamMinge/specter_client">
     <img src="images/logo.png" alt="Logo" width="80" height="80">
   </a>
 
-<h3 align="center">SpecterUI</h3>
+<h3 align="center">Specter</h3>
 
   <p align="center">
-    SpecterUI is a PySide6-based frontend that connects to the Specter-injected target application, offering a rich interface for navigating, controlling, and automating its internals. It simplifies interaction with the gRPC backend through visual object exploration and real-time editing tools.
+    Specter is a Python package composed of three core modules that together support testing automation, inspection, and scripting of target applications.
+    </br>
+    </br>
+    <a href="https://github.com/AdamMinge/specter_client"><strong>Explore the docs »</strong></a>
     <br />
-    <a href="https://github.com/AdamMinge/specterUI"><strong>Explore the docs »</strong></a>
     <br />
-    <br />
-    <a href="https://github.com/AdamMinge/specterUI">View Demo</a>
+    <a href="https://github.com/AdamMinge/specter_client">View Demo</a>
     &middot;
-    <a href="https://github.com/AdamMinge/specterUI/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
+    <a href="https://github.com/AdamMinge/specter_client/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     &middot;
-    <a href="https://github.com/AdamMinge/specterUI/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
+    <a href="https://github.com/AdamMinge/specter_client/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
   </p>
 </div>
 
@@ -44,12 +45,10 @@
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
         <li><a href="#installation">Installation</a></li>
-        <li><a href="#initial-deployment-setup">Initial Deployment Setup</a></li>
-        <li><a href="#build-the-rcc">Build the RCC</a></li>
-        <li><a href="#build-the-app">Build the App</a></li>
+        <li><a href="#build-modules">Build Modules</a></li>
+        <li><a href="#deploy-modules">Deploy Modules</a></li>
       </ul>
     </li>
-    <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
@@ -59,17 +58,27 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-SpecterUI serves as the visual cockpit for working with applications instrumented by the Specter DLL. Built with PySide6 for a responsive and extensible UI, it provides users with a streamlined way to interface with live application data exposed via gRPC.
+specter_client is modular toolkit for interacting with Qt applications instrumented by the Specter DLL.
 
-SpecterUI enables:
 
-- Injection of Specter into new or existing Qt processes
-- Tree-based browsing of the application’s QObject hierarchy
-- Real-time inspection and editing of object properties
-- Method and slot invocation through an interactive UI
-- Action recording for repeatable automation tasks
 
-Designed for developers, QA engineers, and tool integrators, SpecterUI abstracts the lower-level gRPC interface into an accessible and powerful control panel, enabling efficient inspection, debugging, and scripting of Qt applications at runtime.
+- <a href="/specter/README.md"><strong>Specter</strong></a> - 
+Core client and scripting engine. Provides the low-level API for connecting to and communicating with Specter-instrumented Qt applications over gRPC. Enables scripting, test automation, and programmatic interaction.
+
+- <a href="/specter_viewer/README.md"><strong>Specter Viewer</strong></a> - 
+A PySide6-based GUI application for visual inspection, object hierarchy browsing, property editing, method invocation, and test authoring. Acts as the visual control center for live applications.
+
+- <a href="/specter_debugger/README.md"><strong>Specter Debugger</strong></a> - 
+A command-line-oriented module used to run scripted automation scenarios against Specter targets. Useful for continuous integration, regression testing, and non-interactive debugging.
+
+Together, these modules enable:
+- Injection of the Specter DLL into live or launchable Qt processes
+- Tree-based exploration of the QObject hierarchy
+- Real-time editing of properties and invocation of slots/methods
+- Recording and playback of user interactions for test automation
+- Streamlined debugging and scripting workflows for developers and QA
+
+Whether you're testing, inspecting, or integrating with complex Qt systems, the Specter suite provides a powerful and flexible interface for runtime control and automation.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -85,89 +94,43 @@ Designed for developers, QA engineers, and tool integrators, SpecterUI abstracts
 <!-- GETTING STARTED -->
 ## Getting Started
 
-This guide explains how to set up and deploy the specterUI project locally using Poetry and pyside6-deploy.
+This guide explains how to set up and deploy the specter_client project locally using Poetry and pyside6-deploy.
 
 ### Prerequisites
 
 Make sure you have the following installed:
 - Python 3.12
-- Poetry
+- Poetry (With Monorepo Plugin)
 
-To install Poetry:
+To install Poetry and add require plugin:
 ```sh
 pip install poetry
+poetry self add poetry-monorepo-dependency-plugin
 ```
 
 ### Installation
 Clone the repository and install dependencies using Poetry:
 ```sh
-git clone https://github.com/AdamMinge/specterUI.git
-cd specterUI
+git clone https://github.com/AdamMinge/specter_client.git
+cd specter_client
 poetry install
 ```
 
-### Initial Deployment Setup
-
-##### 1.Generate the initial PySide6 deployment config:
+### Build Modules
+Compile all necessary resources for each module, including:
+- Generating Python bindings from .proto files (gRPC)
+- Compiling Qt resource files (.qrc)
 ```sh
-poetry run pyside6-deploy --init specter/__main__.py
+poetry run build
 ```
+_Use this command to generate all the code and assets needed for the modules to function properly._
 
-##### 2.Edit the generated pyside6deploy.spec:
-Update the following fields:
+### Deploy Modules
+Package and deploy each module into distributable executables.
 ```sh
-[app]
-title = specterUI
-exec_directory = build/bin
-icon = images/logo.png
+poetry run deploy
 ```
-You may use an absolute or relative path for exec_directory and icon. Ensure input_file points to specter/main.py.
-
-##### 3. Move the spec file to the root (optional but recommended):
-```sh
-mv specter/pyside6deploy.spec .
-```
-
-### Build the RCC
-Run the rcc building using specterui.qrc
-```sh
-poetry run pyside6-rcc -o specterui/resources/rcc.py specterui/resources/specterui.qrc
-```
-
-### Build the GRPC
-Run the grpc/proto building using specter.proto
-```sh
-python -m grpc_tools.protoc -I. --python_out=. specterui/proto/specter.proto --grpc_python_out=.
-```
-
-### Build the App
-Run the deployment using your updated spec file:
-```sh
-poetry run pyside6-deploy -c pyside6deploy.spec
-```
-The compiled executable will be located in the directory you set under exec_directory (e.g. build/bin/).
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- ROADMAP -->
-## Roadmap
-
-- [x] Objects Dock
-  - [x] Display object hierarchy
-- [x] Properties Dock
-  - [x] Display selected object properties
-  - [x] Edit object properties
-- [ ] Methods Dock
-  - [ ] Display available methods of selected object
-  - [ ] Call selected method with parameters
-- [ ] Terminal Dock
-  - [ ] Execute gRPC commands manually
-- [ ] Recorder Dock
-  - [ ] Enable/Disable recording of actions
-  - [ ] Show list of recorded actions
-
-
-See the [open issues](https://github.com/AdamMinge/specterUI/issues) for a full list of proposed features (and known issues).
+_This command creates deployment configs and builds the final executables for your modules, ready for distribution or testing._
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -189,8 +152,8 @@ Don't forget to give the project a star! Thanks again!
 
 ### Top contributors:
 
-<a href="https://github.com/AdamMinge/specterUI/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=AdamMinge/specterUI" alt="contrib.rocks image" />
+<a href="https://github.com/AdamMinge/specter_client/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=AdamMinge/specter_client" alt="contrib.rocks image" />
 </a>
 
 <!-- LICENSE -->
@@ -206,22 +169,22 @@ Distributed under the Unlicense License. See `LICENSE.txt` for more information.
 
 Adam Minge - minge.adam@gmail.com
 
-Project Link: [https://github.com/AdamMinge/specterUI](https://github.com/AdamMinge/specterUI)
+Project Link: [https://github.com/AdamMinge/specter_client](https://github.com/AdamMinge/specter_client)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/AdamMinge/specterUI.svg?style=for-the-badge
-[contributors-url]: https://github.com/AdamMinge/specterUI/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/AdamMinge/specterUI.svg?style=for-the-badge
-[forks-url]: https://github.com/AdamMinge/specterUI/network/members
-[stars-shield]: https://img.shields.io/github/stars/AdamMinge/specterUI.svg?style=for-the-badge
-[stars-url]: https://github.com/AdamMinge/specterUI/stargazers
-[issues-shield]: https://img.shields.io/github/issues/AdamMinge/specterUI.svg?style=for-the-badge
-[issues-url]: https://github.com/AdamMinge/specterUI/issues
-[license-shield]: https://img.shields.io/github/license/AdamMinge/specterUI.svg?style=for-the-badge
-[license-url]: https://github.com/AdamMinge/specterUI/blob/master/LICENSE.txt
+[contributors-shield]: https://img.shields.io/github/contributors/AdamMinge/specter_client.svg?style=for-the-badge
+[contributors-url]: https://github.com/AdamMinge/specter_client/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/AdamMinge/specter_client.svg?style=for-the-badge
+[forks-url]: https://github.com/AdamMinge/specter_client/network/members
+[stars-shield]: https://img.shields.io/github/stars/AdamMinge/specter_client.svg?style=for-the-badge
+[stars-url]: https://github.com/AdamMinge/specter_client/stargazers
+[issues-shield]: https://img.shields.io/github/issues/AdamMinge/specter_client.svg?style=for-the-badge
+[issues-url]: https://github.com/AdamMinge/specter_client/issues
+[license-shield]: https://img.shields.io/github/license/AdamMinge/specter_client.svg?style=for-the-badge
+[license-url]: https://github.com/AdamMinge/specter_client/blob/master/LICENSE.txt
 [Python]: https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white
 [Python-url]: https://www.python.org/
 [Poetry]: https://img.shields.io/badge/Poetry-1.8+-blueviolet?logo=python&logoColor=white

@@ -1,23 +1,27 @@
-[tool.poetry]
-name = "SpecterUI"
-version = "0.0.1"
-description = "SpecterUI is a PySide6-based frontend that connects to the Specter-injected target application, offering a rich interface for navigating, controlling, and automating its internals. It simplifies interaction with the gRPC backend through visual object exploration and real-time editing tools."
-authors = ["Adam Minge <minge.adam@gmail.com>"]
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
+[tool.poetry]
+name = "specter_client"
+version = "0.1.0"
+description = ""
+authors = ["Adam Minge <minge.adam@gmail.com>"]
+readme = "README.md"
+packages = [{ include = "scripts" }]
+
+[tool.poetry.plugins."poetry.plugin"]
+monorepo = "poetry_monorepo_dependency_plugin.plugin"
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.14"
-pyside6 = "^6.9"
-psutil = "^7.0"
-pyside6-utils = "^1.2.2"
-tomlkit = "^0.5.4"
-pyinjector = "^1.3"
-protobuf = "5.29.4"
-grpcio = "1.71.0"
+specter = { path = "specter", develop = true }
+specter_debugger = { path = "specter_debugger", develop = true }
+specter_viewer = { path = "specter_viewer", develop = true }
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 grpcio-tools = "1.71.0"
 
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.poetry.scripts]
+build = "scripts.build:main"
+deploy = "scripts.deploy:main"
