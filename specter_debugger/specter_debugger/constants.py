@@ -1,0 +1,8 @@
+import os
+
+SPECTER_DEBUGGER_SERVER_HOST = str(
+    os.environ.get("SPECTER_DEBUGGER_SERVER_HOST", "127.0.0.1")
+)
+SPECTER_DEBUGGER_SERVER_PORT = int(
+    os.environ.get("SPECTER_DEBUGGER_SERVER_PORT", "5678")
+)

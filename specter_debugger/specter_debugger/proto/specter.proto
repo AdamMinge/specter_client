@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
+
+package specter_debugger_proto;
+
+// ---------------------------- DebuggerService ------------------------------ //
+
+service DebuggerService {
+    rpc CreateSession(SessionCreate) returns (Session);
+    rpc ListSessions(google.protobuf.Empty) returns (Sessions);
+
+    rpc Start(Session) returns (google.protobuf.Empty);
+    rpc Pause(Session) returns (google.protobuf.Empty);
+    rpc Stop(Session) returns (google.protobuf.Empty);
+
+    rpc SetBreakpoint(BreakpointsSet) returns (google.protobuf.Empty);
+    rpc GetBreakpoints(Session) returns (Breakpoints);
+
+    rpc ListenEvents(Session) returns (stream Event);
+}
+
+// -------------------------------- Messages --------------------------------- //
+
+message SessionCreate {
+    oneof create {
+        SessionCreateFromFile session_create_from_file = 1;
+        SessionCreateFromData session_create_from_data = 2;
+    }
+}
+
+message SessionCreateFromFile {
+    string file = 1;
+}
+
+message SessionCreateFromData {
+    bytes data = 1;
+}
+
+message Session {
+    string id = 1;
+}
+
+message Sessions {
+    repeated Session sessions = 1;
+}
+
+message Breakpoint {
+    string filename = 1;
+    int32 lineno = 2;
+}
+
+message Breakpoints {
+    repeated Breakpoint breakpoints = 1;
+}
+
+message BreakpointsSet {
+    Session session = 1;
+    Breakpoints breakpoints = 2;
+}
+
+message Event {
+    oneof event {
+        LineChangedEvent line_changed_event = 1;
+        DebugSessionFinishedEvent debug_session_finished_event = 2;
+        StdoutEvent stdout_event = 3;
+        StderrEvent stderr_event = 4;
+    }
+}
+
+message LineChangedEvent {
+    string filename = 1;
+    int32 lineno = 2;
+}
+
+message DebugSessionFinishedEvent {
+}
+
+message StdoutEvent {
+    string message = 1;
+}
+
+message StderrEvent {
+    string message = 1;
+}
