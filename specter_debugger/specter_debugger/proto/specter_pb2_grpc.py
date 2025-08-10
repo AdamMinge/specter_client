@@ -39,13 +39,18 @@ class DebuggerServiceStub(object):
         """
         self.CreateSession = channel.unary_unary(
                 '/specter_debugger_proto.DebuggerService/CreateSession',
-                request_serializer=specter__debugger_dot_proto_dot_specter__pb2.SessionCreate.SerializeToString,
+                request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
                 response_deserializer=specter__debugger_dot_proto_dot_specter__pb2.Session.FromString,
                 _registered_method=True)
         self.ListSessions = channel.unary_unary(
                 '/specter_debugger_proto.DebuggerService/ListSessions',
                 request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
                 response_deserializer=specter__debugger_dot_proto_dot_specter__pb2.Sessions.FromString,
+                _registered_method=True)
+        self.SetSource = channel.unary_unary(
+                '/specter_debugger_proto.DebuggerService/SetSource',
+                request_serializer=specter__debugger_dot_proto_dot_specter__pb2.SourceSet.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
         self.Start = channel.unary_unary(
                 '/specter_debugger_proto.DebuggerService/Start',
@@ -62,9 +67,14 @@ class DebuggerServiceStub(object):
                 request_serializer=specter__debugger_dot_proto_dot_specter__pb2.Session.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
-        self.SetBreakpoint = channel.unary_unary(
-                '/specter_debugger_proto.DebuggerService/SetBreakpoint',
-                request_serializer=specter__debugger_dot_proto_dot_specter__pb2.BreakpointsSet.SerializeToString,
+        self.AddBreakpoint = channel.unary_unary(
+                '/specter_debugger_proto.DebuggerService/AddBreakpoint',
+                request_serializer=specter__debugger_dot_proto_dot_specter__pb2.BreakpointAdd.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+        self.RemoveBreakpoint = channel.unary_unary(
+                '/specter_debugger_proto.DebuggerService/RemoveBreakpoint',
+                request_serializer=specter__debugger_dot_proto_dot_specter__pb2.BreakpointRemove.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
         self.GetBreakpoints = channel.unary_unary(
@@ -96,6 +106,12 @@ class DebuggerServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SetSource(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def Start(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -114,7 +130,13 @@ class DebuggerServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def SetBreakpoint(self, request, context):
+    def AddBreakpoint(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def RemoveBreakpoint(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -137,13 +159,18 @@ def add_DebuggerServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'CreateSession': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateSession,
-                    request_deserializer=specter__debugger_dot_proto_dot_specter__pb2.SessionCreate.FromString,
+                    request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                     response_serializer=specter__debugger_dot_proto_dot_specter__pb2.Session.SerializeToString,
             ),
             'ListSessions': grpc.unary_unary_rpc_method_handler(
                     servicer.ListSessions,
                     request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                     response_serializer=specter__debugger_dot_proto_dot_specter__pb2.Sessions.SerializeToString,
+            ),
+            'SetSource': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetSource,
+                    request_deserializer=specter__debugger_dot_proto_dot_specter__pb2.SourceSet.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
             'Start': grpc.unary_unary_rpc_method_handler(
                     servicer.Start,
@@ -160,9 +187,14 @@ def add_DebuggerServiceServicer_to_server(servicer, server):
                     request_deserializer=specter__debugger_dot_proto_dot_specter__pb2.Session.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
-            'SetBreakpoint': grpc.unary_unary_rpc_method_handler(
-                    servicer.SetBreakpoint,
-                    request_deserializer=specter__debugger_dot_proto_dot_specter__pb2.BreakpointsSet.FromString,
+            'AddBreakpoint': grpc.unary_unary_rpc_method_handler(
+                    servicer.AddBreakpoint,
+                    request_deserializer=specter__debugger_dot_proto_dot_specter__pb2.BreakpointAdd.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'RemoveBreakpoint': grpc.unary_unary_rpc_method_handler(
+                    servicer.RemoveBreakpoint,
+                    request_deserializer=specter__debugger_dot_proto_dot_specter__pb2.BreakpointRemove.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
             'GetBreakpoints': grpc.unary_unary_rpc_method_handler(
@@ -203,7 +235,7 @@ class DebuggerService(object):
             request,
             target,
             '/specter_debugger_proto.DebuggerService/CreateSession',
-            specter__debugger_dot_proto_dot_specter__pb2.SessionCreate.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             specter__debugger_dot_proto_dot_specter__pb2.Session.FromString,
             options,
             channel_credentials,
@@ -232,6 +264,33 @@ class DebuggerService(object):
             '/specter_debugger_proto.DebuggerService/ListSessions',
             google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             specter__debugger_dot_proto_dot_specter__pb2.Sessions.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SetSource(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/specter_debugger_proto.DebuggerService/SetSource',
+            specter__debugger_dot_proto_dot_specter__pb2.SourceSet.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
             channel_credentials,
             insecure,
@@ -324,7 +383,7 @@ class DebuggerService(object):
             _registered_method=True)
 
     @staticmethod
-    def SetBreakpoint(request,
+    def AddBreakpoint(request,
             target,
             options=(),
             channel_credentials=None,
@@ -337,8 +396,35 @@ class DebuggerService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/specter_debugger_proto.DebuggerService/SetBreakpoint',
-            specter__debugger_dot_proto_dot_specter__pb2.BreakpointsSet.SerializeToString,
+            '/specter_debugger_proto.DebuggerService/AddBreakpoint',
+            specter__debugger_dot_proto_dot_specter__pb2.BreakpointAdd.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def RemoveBreakpoint(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/specter_debugger_proto.DebuggerService/RemoveBreakpoint',
+            specter__debugger_dot_proto_dot_specter__pb2.BreakpointRemove.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
             channel_credentials,

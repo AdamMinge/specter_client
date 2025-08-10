@@ -3,7 +3,7 @@ from specter_debugger.server import DebuggerServer
 
 
 class DebuggerClientCLI:
-    def __init__(self, address="localhost:50051"):
+    def __init__(self, address: str = "localhost:50051"):
         self.client = DebuggerClient(address)
         self.session_id = None
         self.listening = False
@@ -27,29 +27,29 @@ class DebuggerClientCLI:
                 self.print_help()
             elif command == "exit":
                 break
-            elif command == "create_file":
-                if len(args) != 2:
-                    print("Usage: create_file <filename>")
-                    continue
-                self.session_id = self.create_session_from_file(args[1])
-            elif command == "create_data":
-                if len(args) != 2:
-                    print("Usage: create_data <filepath>")
-                    continue
-                self.session_id = self.create_session_from_data(args[1])
-            elif command == "list":
+            elif command == "create_session":
+                self.session_id = self.create_session()
+            elif command == "get_sessions":
                 self.list_sessions()
+            elif command == "set_source":
+                if len(args) != 2:
+                    print("Usage: set_source <filename>")
+                    continue
+                self.set_source(args[1])
             elif command == "start":
                 self.start()
             elif command == "stop":
                 self.stop()
-            elif command == "set_breakpoints":
-                if len(args) < 2:
-                    print(
-                        "Usage: set_breakpoints <filename:lineno> [<filename:lineno> ...]"
-                    )
+            elif command == "add_breakpoint":
+                if len(args) != 2:
+                    print("Usage: add_breakpoint <filename:lineno>")
                     continue
-                self.set_breakpoints(args[1:])
+                self.add_breakpoint(args[1])
+            elif command == "remove_breakpoint":
+                if len(args) != 2:
+                    print("Usage: remove_breakpoint <filename:lineno>")
+                    continue
+                self.remove_breakpoint(args[1])
             elif command == "get_breakpoints":
                 self.get_breakpoints()
             elif command == "listen":
@@ -63,38 +63,39 @@ class DebuggerClientCLI:
 
     def print_help(self):
         print(
-            """
-Commands:
-  create_file <filename>      - Create debugging session from source file
-  create_data <filepath>      - Create debugging session from file bytes
-  list                        - List active sessions
-  start                       - Start debugging current session
-  stop                        - Stop debugging current session
-  set_breakpoints f:ln [...]  - Set breakpoints, example: foo.py:10 bar.py:20
-  get_breakpoints             - Get breakpoints of current session
-  listen                      - Start listening to debug events (async)
-  stop_listen                 - Stop listening to events
-  exit                        - Exit CLI
-"""
+            "Commands: \n",
+            "create_session            - Create debugging session \n",
+            "get_sessions              - List active sessions \n",
+            "set_source <filename>     - Set source for current session \n",
+            "start                     - Start debugging current session \n",
+            "stop                      - Stop debugging current session \n",
+            "add_breakpoint f:ln       - Add a breakpoint, example: foo.py:10 \n",
+            "remove_breakpoint f:ln    - Remove a breakpoint, example: foo.py:10 \n",
+            "get_breakpoints           - Get breakpoints of current session \n",
+            "listen                    - Start listening to debug events (async) \n",
+            "stop_listen               - Stop listening to events \n",
+            "exit                      - Exit CLI \n",
         )
 
-    def create_session_from_file(self, filepath):
+    def create_session(self):
         try:
-            session = self.client.create_session_from_file(filepath)
+            session = self.client.create_session()
             print(f"Session created with id: {session.id}")
             return session.id
         except Exception as e:
             print(f"Error creating session: {e}")
 
-    def create_session_from_data(self, filepath):
+    def set_source(self, filepath):
+        if not self.session_id:
+            print("No session selected")
+            return
         try:
             with open(filepath, "rb") as f:
                 data = f.read()
-            session = self.client.create_session_from_data(data)
-            print(f"Session created with id: {session.id}")
-            return session.id
+            self.client.set_source(self.session_id, data)
+            print(f"Source set from {filepath}")
         except Exception as e:
-            print(f"Error creating session: {e}")
+            print(f"Error setting source: {e}")
 
     def list_sessions(self):
         try:
@@ -128,25 +129,29 @@ Commands:
         except Exception as e:
             print(f"Error stopping session: {e}")
 
-    def set_breakpoints(self, bp_args):
+    def add_breakpoint(self, bp_str):
         if not self.session_id:
             print("No session selected")
             return
         try:
-            breakpoints = []
-            for bp_str in bp_args:
-                if ":" not in bp_str:
-                    print(
-                        f"Invalid breakpoint format: {bp_str}, expected filename:lineno"
-                    )
-                    return
-                filename, lineno_str = bp_str.split(":", 1)
-                lineno = int(lineno_str)
-                breakpoints.append((filename, lineno))
-            self.client.set_breakpoints(self.session_id, breakpoints)
-            print(f"Set {len(breakpoints)} breakpoints")
+            filename, lineno_str = bp_str.split(":", 1)
+            lineno = int(lineno_str)
+            self.client.add_breakpoint(self.session_id, filename, lineno)
+            print(f"Added breakpoint at {filename}:{lineno}")
         except Exception as e:
-            print(f"Error setting breakpoints: {e}")
+            print(f"Error adding breakpoint: {e}")
+
+    def remove_breakpoint(self, bp_str):
+        if not self.session_id:
+            print("No session selected")
+            return
+        try:
+            filename, lineno_str = bp_str.split(":", 1)
+            lineno = int(lineno_str)
+            self.client.remove_breakpoint(self.session_id, filename, lineno)
+            print(f"Removed breakpoint at {filename}:{lineno}")
+        except Exception as e:
+            print(f"Error removing breakpoint: {e}")
 
     def get_breakpoints(self):
         if not self.session_id:
@@ -175,7 +180,7 @@ Commands:
             if event.HasField("line_changed_event"):
                 e = event.line_changed_event
                 print(f"[EVENT] Line changed: {e.filename}:{e.lineno}")
-            elif event.HasField("debug_session_finished_event"):
+            elif event.HasField("finished_event"):
                 print("[EVENT] Debug session finished")
             elif event.HasField("stdout_event"):
                 print(f"[STDOUT] {event.stdout_event.message}")
@@ -196,21 +201,25 @@ Commands:
 
 
 class DebuggerServerCLI:
-    def __init__(self, address):
-        self.server = DebuggerServer(address)
-        self.running = False
+    def __init__(self, address: str, autostart: bool):
+        self._server = DebuggerServer(address)
+        self._autostart = autostart
+        self._running = False
 
     def run(self):
         print("Specter Debugger Server CLI")
         print("Type 'help' for commands")
+
+        if self._autostart:
+            self._start()
 
         while True:
             try:
                 cmd = input("> ").strip()
             except (KeyboardInterrupt, EOFError):
                 print("\nExiting...")
-                if self.running:
-                    self.server.stop()
+                if self._running:
+                    self._server.stop()
                 break
 
             if not cmd:
@@ -219,34 +228,41 @@ class DebuggerServerCLI:
             command = cmd.lower()
 
             if command == "help":
-                self.print_help()
+                self._print_help()
             elif command == "start":
-                if self.running:
-                    print("Server is already running.")
-                else:
-                    self.server.start()
-                    self.running = True
+                self._start()
             elif command == "stop":
-                if not self.running:
-                    print("Server is not running.")
-                else:
-                    self.server.stop()
-                    self.running = False
+                self._stop()
             elif command == "exit":
-                if self.running:
-                    self.server.stop()
-                print("Goodbye!")
+                self._exit()
                 break
             else:
                 print(f"Unknown command: {command}")
 
-    def print_help(self):
+    def _start(self):
+        if self._running:
+            print("Server is already running.")
+        else:
+            self._server.start()
+            self._running = True
+
+    def _stop(self):
+        if not self._running:
+            print("Server is not running.")
+        else:
+            self._server.stop()
+            self._running = False
+
+    def _exit(self):
+        if self._running:
+            self._server.stop()
+        print("Goodbye!")
+
+    def _print_help(self):
         print(
-            """
-Commands:
-  start  - Start the gRPC debugger server
-  stop   - Stop the gRPC debugger server
-  exit   - Exit this CLI
-  help   - Show this help message
-"""
+            "Commands: \n",
+            "start  - Start the gRPC debugger server \n",
+            "stop   - Stop the gRPC debugger server \n",
+            "exit   - Exit this CLI \n",
+            "help   - Show this help message \n",
         )

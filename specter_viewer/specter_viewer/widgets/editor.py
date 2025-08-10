@@ -1,7 +1,5 @@
-import builtins
-import traceback
-import bdb
-import sys
+import subprocess
+import functools
 
 from PySide6.QtWidgets import (
     QDockWidget,
@@ -22,9 +20,6 @@ from PySide6.QtCore import (
     Slot,
     Signal,
     QRect,
-    QThread,
-    QMutex,
-    QWaitCondition,
     Q_ARG,
 )
 from PySide6.QtGui import (
@@ -44,6 +39,13 @@ from PySide6.QtGui import (
 )
 
 from specter.client import Client
+from specter_debugger import DebuggerClient
+
+from specter_viewer.constants import (
+    SPECTER_VIEVER_DEBUGGER_PATH,
+    SPECTER_VIEVER_DEBUGGER_HOST,
+    SPECTER_VIEVER_DEBUGGER_PORT,
+)
 
 
 class PythonHighlighter(QSyntaxHighlighter):
@@ -457,214 +459,102 @@ class CodeEditor(QPlainTextEdit):
         )
 
 
-class CustomStream(QObject):
-    text_written = Signal(str)
+def returns_bool_on_exception(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            func(*args, **kwargs)
+            return True
+        except Exception:
+            return False
 
-    def write(self, text):
-        if text:
-            self.text_written.emit(text)
-
-    def flush(self):
-        pass
+    return wrapper
 
 
-class DebuggerThread(QThread, bdb.Bdb):
+class SpecterDebugger(QObject):
     code_started = Signal()
     code_finished = Signal(str)
     current_line_changed = Signal(int)
     output_received = Signal(str)
     error_occurred = Signal(str)
-    breakpoint_toggled = Signal(int, bool)
 
-    def __init__(self, parent=None):
-        QThread.__init__(self, parent)
-        bdb.Bdb.__init__(self)
+    def __init__(self):
+        super().__init__()
+        self._client = None
+        self._server_proc = subprocess.Popen(
+            [
+                SPECTER_VIEVER_DEBUGGER_PATH,
+                "server",
+                "--host",
+                SPECTER_VIEVER_DEBUGGER_HOST,
+                "--port",
+                str(SPECTER_VIEVER_DEBUGGER_PORT),
+                "--autostart",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
 
-        self._filename = "<string>"
-        self._source_string = ""
-        self._source_lines = []
-
-        self._globals_dict = {}
-        self._locals_dict = {}
-
-        self._stop_requested = False
-
-        self._pause_mutex = QMutex()
-        self._pause_condition = QWaitCondition()
-        self._is_paused = False
-
-        self._original_stdout = sys.stdout
-        self._original_stderr = sys.stderr
-
-        self._custom_stdout = CustomStream()
-        self._custom_stderr = CustomStream()
-
-        self._custom_stdout.text_written.connect(self.output_received.emit)
-        self._custom_stderr.text_written.connect(self.output_received.emit)
-
-    def _populate_linecache(self):
-        if self._source_string and self._source_lines:
-
-            import linecache
-
-            linecache.cache[self._filename] = (
-                len(self._source_string),
-                0,
-                self._source_lines,
-                self._filename,
+    @property
+    def client(self):
+        if not self._client:
+            self._client = DebuggerClient(
+                f"{SPECTER_VIEVER_DEBUGGER_HOST}:{SPECTER_VIEVER_DEBUGGER_PORT}"
             )
 
-    @Slot(str)
-    def set_source(self, source_string: str):
-        self.clear_all_breakpoints()
-        self._source_string = source_string
-        self._source_lines = self._source_string.splitlines(keepends=True)
-        self._populate_linecache()
+            session = self._client.create_session()
+            self._session_id = session.id
+            self._client.listen_events(self._session_id, self._on_event)
 
-    @Slot(dict, dict)
-    def set_context(self, globals_dict: dict, locals_dict: dict):
-        self._globals_dict = globals_dict
-        self._locals_dict = locals_dict
+        return self._client
 
-    def run(self):
-        self._stop_requested = False
-        self._is_paused = False
-        self._error_already_reported = False
+    def _on_event(self, event):
+        event_type = event.WhichOneof("event")
 
-        sys.stdout = self._custom_stdout
-        sys.stderr = self._custom_stderr
-
-        self.code_started.emit()
-        result_status = "error"
-
-        try:
-            bdb.Bdb.run(
-                self, self._source_string, self._globals_dict, self._locals_dict
-            )
-            result_status = "success"
-        except bdb.BdbQuit:
-            result_status = "stopped"
-        except Exception:
-            if not self._error_already_reported:
-                exc_type, exc_value, exc_traceback = sys.exc_info()
-                formatted_traceback = self._format_user_traceback(
-                    exc_type, exc_value, exc_traceback
-                )
-                self.error_occurred.emit(f"Runtime Error:\n{formatted_traceback}")
-            result_status = "error"
-        finally:
-            sys.stdout = self._original_stdout
-            sys.stderr = self._original_stderr
-
-            self.code_finished.emit(result_status)
-
-            self._pause_mutex.lock()
-            self._is_paused = False
-            self._pause_condition.wakeAll()
-            self._pause_mutex.unlock()
-
-    @Slot()
-    def stop_execution(self):
-        self._stop_requested = True
-        self._pause_mutex.lock()
-
-        if self._is_paused:
-            self._is_paused = False
-            self._pause_condition.wakeAll()
-        self._pause_mutex.unlock()
-
-    @Slot()
-    def continue_execution(self):
-        self.set_continue()
-        self._pause_mutex.lock()
-        if self._is_paused:
-            self._is_paused = False
-            self._pause_condition.wakeAll()
-        self._pause_mutex.unlock()
-
-    @Slot(int)
-    def set_breakpoint(self, lineno: int):
-        self._populate_linecache()
-        result = self.set_break(self._filename, lineno)
-        if result is None:
-            self.breakpoint_toggled.emit(lineno, True)
-
-    @Slot(int)
-    def clear_breakpoint(self, lineno: int):
-        result = self.clear_break(self._filename, lineno)
-        if result is None:
-            self.breakpoint_toggled.emit(lineno, False)
-
-    @Slot()
-    def clear_all_breakpoints(self):
-        self.clear_all_breaks()
-
-    def user_line(self, frame):
-        if self._stop_requested:
-            raise bdb.BdbQuit
-
-        filename = self.canonic(frame.f_code.co_filename)
-        lineno = frame.f_lineno
-
-        if self._filename == filename:
+        if event_type == "line_changed_event":
+            line_event = event.line_changed_event
+            lineno = line_event.lineno
             self.current_line_changed.emit(lineno)
 
-            if self._is_break(filename, lineno):
-                self._pause_mutex.lock()
-                self._is_paused = True
-                while self._is_paused and not self._stop_requested:
-                    self._pause_condition.wait(self._pause_mutex)
-                self._pause_mutex.unlock()
+        elif event_type == "finished_event":
+            finished_event = event.finished_event
+            status = finished_event.status
+            self.code_finished.emit(status)
 
-                if self._stop_requested:
-                    raise bdb.BdbQuit
+        elif event_type == "started_event":
+            self.code_started.emit()
 
-    def user_exception(self, frame, exc_info):
-        if not self._error_already_reported:
-            exc_type, exc_value, exc_traceback = exc_info
+        elif event_type == "stdout_event":
+            stdout_event = event.stdout_event
+            message = stdout_event.message
+            self.output_received.emit(message)
 
-            is_builtin_type_error = (
-                isinstance(exc_value, TypeError)
-                and "is a built-in module" in str(exc_value)
-                and "getfile" in "".join(traceback.format_tb(exc_traceback))
-            )
+        elif event_type == "stderr_event":
+            stderr_event = event.stderr_event
+            message = stderr_event.message
+            self.error_occurred.emit(message)
 
-            if is_builtin_type_error:
-                self._error_already_reported = True
-                return
+    @returns_bool_on_exception
+    def start(self):
+        self.client.start(self._session_id)
 
-            formatted_traceback = self._format_user_traceback(
-                exc_type, exc_value, exc_traceback
-            )
-            print(f"Exception in user code:\n{formatted_traceback}")
-            self._error_already_reported = True
+    @returns_bool_on_exception
+    def stop(self):
+        self.client.stop(self._session_id)
 
-    def _is_break(self, filename, lineno):
-        breaks_for_file = self.get_all_breaks().get(filename)
-        return breaks_for_file is not None and lineno in breaks_for_file
+    @returns_bool_on_exception
+    def resume(self):
+        pass
 
-    def _format_user_traceback(self, exc_type, exc_value, exc_traceback):
-        formatted_lines = ["Traceback (most recent call last):"]
-        extracted_tb = traceback.extract_tb(exc_traceback)
+    @returns_bool_on_exception
+    def set_source(self, source: str):
+        self.client.set_source(self._session_id, "<string>", source.encode("utf-8"))
 
-        user_code_frames = []
-        for frame_summary in extracted_tb:
-            if self.canonic(frame_summary.filename) == self._filename:
-                user_code_frames.append(frame_summary)
+    def add_breakpoint(self, breakpoint: int):
+        self.client.add_breakpoint(self._session_id, "<string>", breakpoint)
 
-        if not user_code_frames:
-            user_code_frames = extracted_tb
-
-        for frame_summary in user_code_frames:
-            formatted_lines.append(
-                f'  File "{frame_summary.filename}", line {frame_summary.lineno}, in {frame_summary.name}'
-            )
-            if frame_summary.line:
-                formatted_lines.append(f"    {frame_summary.line.strip()}")
-
-        formatted_lines.append(f"{exc_type.__name__}: {exc_value}")
-
-        return "\n".join(formatted_lines)
+    def remove_breakpoint(self, breakpoint: int):
+        self.client.remove_breakpoint(self._session_id, "<string>", breakpoint)
 
 
 class EditorDock(QDockWidget):
@@ -672,13 +562,13 @@ class EditorDock(QDockWidget):
     CONSOLE_TEXT_COLOR = QColor("#abb2bf")
     ERROR_TEXT_COLOR = QColor("#e06c75")
 
-    def __init__(self, client=None):
+    def __init__(self, client: Client = None):
         super().__init__("Editor")
         self._client = client
+        self._debugger = SpecterDebugger()
 
         self._init_ui()
         self._init_connections()
-        self._create_debugger()
 
     def _init_ui(self):
         main_widget = QWidget()
@@ -735,6 +625,12 @@ class EditorDock(QDockWidget):
         self._code_editor.try_add_breakpoint.connect(self._on_try_add_breakpoint)
         self._code_editor.try_remove_breakpoint.connect(self._on_try_remove_breakpoint)
 
+        self._debugger.code_started.connect(self._on_code_started)
+        self._debugger.code_finished.connect(self._on_code_finished)
+        self._debugger.current_line_changed.connect(self._on_current_line_changed)
+        self._debugger.output_received.connect(self._on_output_received)
+        self._debugger.error_occurred.connect(self._on_error_occurred)
+
     def _make_tool_button(self, tooltip: str, icon_path: str) -> QToolButton:
         btn = QToolButton()
         try:
@@ -754,60 +650,19 @@ class EditorDock(QDockWidget):
         self._resume_button.setEnabled(running and paused)
         self._code_editor.setReadOnly(running)
 
-    def _create_debugger(self):
-        if getattr(self, "_debugger", None) and self._debugger.isRunning():
-            self._debugger.stop_execution()
-            self._debugger.wait()
-            self._debugger.deleteLater()
-            self._debugger = None
-
-        self._debugger = DebuggerThread(self)
-
-        self._debugger.code_started.connect(self._on_code_started)
-        self._debugger.code_finished.connect(self._on_code_finished)
-        self._debugger.current_line_changed.connect(self._on_current_line_changed)
-        self._debugger.output_received.connect(self._on_output_received)
-        self._debugger.error_occurred.connect(self._on_error_occurred)
-        self._debugger.breakpoint_toggled.connect(self._on_breakpoint_toggled)
-
-        self._debugger.finished.connect(self._create_debugger)
-
-        self._code_editor.clear_highlighting()
-        code = self._code_editor.toPlainText()
-        self._debugger.set_source(code)
-
-        for bp_line in list(self._code_editor.get_breakpoints()):
-            self._debugger.set_breakpoint(bp_line)
-
-        self._debugger.set_context(
-            globals_dict=self._get_globals_context(),
-            locals_dict=self._get_locals_context(),
-        )
-
     def _on_start_clicked(self):
         self._output_console.clear()
         self._code_editor.clear_highlighting()
+        self._debugger.start()
         self._update_states(running=True, paused=False)
 
-        self._debugger.start()
-
-    def _get_globals_context(self):
-        globals_context = {
-            "__builtins__": builtins,
-        }
-
-        return globals_context
-
-    def _get_locals_context(self):
-        return {}
-
     def _on_stop_clicked(self):
-        self._debugger.stop_execution()
+        self._debugger.stop()
         self._code_editor.clear_highlighting()
 
     def _on_resume_clicked(self):
+        self._debugger.resume()
         self._update_states(running=True, paused=False)
-        self._debugger.continue_execution()
 
     def _on_code_started(self):
         self._output_console.append("--- Code Execution Started ---\n")
@@ -818,7 +673,6 @@ class EditorDock(QDockWidget):
         self._code_editor.clear_highlighting()
 
     def _on_current_line_changed(self, line_number: int):
-        self._update_states(running=True, paused=self._debugger._is_paused)
         self._code_editor.highlight_executed_line(line_number)
 
     def _on_output_received(self, text: str):
@@ -859,28 +713,10 @@ class EditorDock(QDockWidget):
         code = self._code_editor.toPlainText()
         self._debugger.set_source(code)
 
-        for bp_line in list(self._code_editor.get_breakpoints()):
-            self._debugger.set_breakpoint(bp_line)
-
     def _on_try_add_breakpoint(self, breakpoint_lineno: int):
-        QMetaObject.invokeMethod(
-            self._debugger,
-            "set_breakpoint",
-            Qt.QueuedConnection,
-            Q_ARG(int, breakpoint_lineno),
-        )
+        if self._debugger.add_breakpoint(breakpoint_lineno):
+            self._code_editor.add_breakpoint(breakpoint_lineno)
 
     def _on_try_remove_breakpoint(self, breakpoint_lineno: int):
-        QMetaObject.invokeMethod(
-            self._debugger,
-            "clear_breakpoint",
-            Qt.QueuedConnection,
-            Q_ARG(int, breakpoint_lineno),
-        )
-
-    @Slot(int, str)
-    def _on_breakpoint_toggled(self, breakpoint_lineno: int, toggled: True):
-        if toggled:
-            self._code_editor.add_breakpoint(breakpoint_lineno)
-        else:
+        if self._debugger.remove_breakpoint(breakpoint_lineno):
             self._code_editor.remove_breakpoint(breakpoint_lineno)

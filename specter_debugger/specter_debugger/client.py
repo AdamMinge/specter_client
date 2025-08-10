@@ -12,44 +12,43 @@ class DebuggerClient:
         self.stub = pb2_grpc.DebuggerServiceStub(self.channel)
         self._stop_event = threading.Event()
 
-    def create_session_from_file(self, filepath):
-        request = pb2.SessionCreate(
-            session_create_from_file=pb2.SessionCreateFromFile(file=filepath)
-        )
-        return self.stub.CreateSession(request)
-
-    def create_session_from_data(self, data_bytes):
-        request = pb2.SessionCreate(
-            session_create_from_data=pb2.SessionCreateFromData(data=data_bytes)
-        )
-        return self.stub.CreateSession(request)
+    def create_session(self):
+        return self.stub.CreateSession(Empty())
 
     def list_sessions(self):
         return self.stub.ListSessions(Empty())
 
+    def set_source(self, session_id, filename, data_bytes):
+        request = pb2.SourceSet(
+            session=pb2.Session(id=session_id), filename=filename, data=data_bytes
+        )
+        return self.stub.SetSource(request)
+
     def start(self, session_id):
-        request = pb2.Session(id=session_id)
-        return self.stub.Start(request)
+        return self.stub.Start(pb2.Session(id=session_id))
 
     def pause(self, session_id):
-        request = pb2.Session(id=session_id)
-        return self.stub.Pause(request)
+        return self.stub.Pause(pb2.Session(id=session_id))
 
     def stop(self, session_id):
-        request = pb2.Session(id=session_id)
-        return self.stub.Stop(request)
+        return self.stub.Stop(pb2.Session(id=session_id))
 
-    def set_breakpoints(self, session_id, breakpoints):
-        bp_messages = [pb2.Breakpoint(filename=fn, lineno=ln) for fn, ln in breakpoints]
-        request = pb2.BreakpointsSet(
+    def add_breakpoint(self, session_id, filename, lineno):
+        request = pb2.BreakpointAdd(
             session=pb2.Session(id=session_id),
-            breakpoints=pb2.Breakpoints(breakpoints=bp_messages),
+            breakpoint=pb2.Breakpoint(filename=filename, lineno=lineno),
         )
-        return self.stub.SetBreakpoint(request)
+        return self.stub.AddBreakpoint(request)
+
+    def remove_breakpoint(self, session_id, filename, lineno):
+        request = pb2.BreakpointRemove(
+            session=pb2.Session(id=session_id),
+            breakpoint=pb2.Breakpoint(filename=filename, lineno=lineno),
+        )
+        return self.stub.RemoveBreakpoint(request)
 
     def get_breakpoints(self, session_id):
-        request = pb2.Session(id=session_id)
-        return self.stub.GetBreakpoints(request)
+        return self.stub.GetBreakpoints(pb2.Session(id=session_id))
 
     def listen_events(self, session_id, callback):
         def _listen():
@@ -59,7 +58,7 @@ class DebuggerClient:
                     if self._stop_event.is_set():
                         break
                     callback(event)
-            except grpc.RpcError as e:
+            except grpc.RpcError:
                 pass
 
         self._stop_event.clear()

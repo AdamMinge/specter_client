@@ -10,6 +10,7 @@ authors = ["Adam Minge <minge.adam@gmail.com>"]
 python = ">=3.12,<3.14"
 pyside6 = "^6.9"
 specter = {path = "../specter", develop=true}
+specter_debugger = {path = "../specter_debugger", develop=true}
 
 [build-system]
 requires = ["poetry-core"]

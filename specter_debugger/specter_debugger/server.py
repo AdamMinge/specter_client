@@ -1,5 +1,6 @@
 import concurrent
 import threading
+import linecache
 import queue
 import uuid
 import grpc
@@ -41,25 +42,24 @@ class OutputCapture:
 
 
 class DebuggerSession:
-    def __init__(self, session_id, filename=None, data=None):
+    def __init__(self, session_id):
         self.id = session_id
-        self.filename = filename
-        self.data = data
+        self.filename = None
+        self.data = None
         self.breakpoints = []
         self.output_queue = queue.Queue()
         self.event_queue = queue.Queue()
-        self.debugger = self._create_debugger()
+        self.debugger: bdb.Bdb = self._create_debugger()
         self.thread = None
         self.running = False
 
     def _create_debugger(self):
         session = self
-        target_file = self.filename or "<debugger_input>"
 
         class ServerBdb(bdb.Bdb):
             def user_line(self_inner, frame):
                 filename = frame.f_code.co_filename
-                if filename == target_file:
+                if filename == self.filename:
                     lineno = frame.f_lineno
                     ev = pb2.Event(
                         line_changed_event=pb2.LineChangedEvent(
@@ -71,7 +71,7 @@ class DebuggerSession:
             def user_exception(self_inner, frame, exc_info):
                 filename = frame.f_code.co_filename
                 current_file = os.path.abspath(filename)
-                if current_file == target_file:
+                if current_file == self.filename:
                     exc_type, exc_value, _ = exc_info
                     msg = f"Exception: {exc_type.__name__}: {exc_value}"
                     session.event_queue.put(
@@ -92,46 +92,62 @@ class DebuggerSession:
     def run_debugger(self):
         if self.running:
             return
+
         self.running = True
+
+        status = "success"
         try:
-            code = None
-
-            if self.filename:
-                with open(self.filename, "r") as f:
-                    code = f.read()
-            elif self.data:
-                code = self.data.decode("utf-8")
-
-            if code:
-                filename_for_compilation = self.filename or "<debugger_input>"
-                code_obj = compile(code, filename_for_compilation, "exec")
-
-                original_stdout = sys.stdout
-                original_stderr = sys.stderr
-                sys.stdout = OutputCapture(self.event_queue, "stdout")
-                sys.stderr = OutputCapture(self.event_queue, "stderr")
-
-                try:
-                    self.debugger.runctx(code_obj, globals(), locals())
-                finally:
-                    sys.stdout.flush()
-                    sys.stderr.flush()
-
-                    sys.stdout = original_stdout
-                    sys.stderr = original_stderr
-            else:
+            if not self.data:
                 self.event_queue.put(
-                    pb2.Event(stderr_event=pb2.StderrEvent(message="No code to run"))
+                    pb2.Event(
+                        stderr_event=pb2.StderrEvent(
+                            message="No source set for session"
+                        )
+                    )
                 )
+                status = "error: no source set"
+                return
+
+            code = self.data.decode("utf-8")
+
+            linecache.cache[self.filename] = (
+                len(code),
+                None,
+                code.splitlines(True),
+                self.filename,
+            )
+
+            code_obj = compile(code, self.filename, "exec")
+
+            original_stdout = sys.stdout
+            original_stderr = sys.stderr
+            sys.stdout = OutputCapture(self.event_queue, "stdout")
+            sys.stderr = OutputCapture(self.event_queue, "stderr")
+
+            self.event_queue.put(pb2.Event(started_event=pb2.StartedEvent()))
+
+            try:
+                self.debugger.runctx(code_obj, globals(), locals())
+            finally:
+                sys.stdout.flush()
+                sys.stderr.flush()
+
+                sys.stdout = original_stdout
+                sys.stderr = original_stderr
+
         except Exception as e:
             self.event_queue.put(
                 pb2.Event(stderr_event=pb2.StderrEvent(message=f"Exception: {e}"))
             )
+            status = f"error: {e}"
         finally:
             self.event_queue.put(
-                pb2.Event(debug_session_finished_event=pb2.DebugSessionFinishedEvent())
+                pb2.Event(finished_event=pb2.FinishedEvent(status=status))
             )
             self.running = False
+
+            if self.filename in linecache.cache:
+                del linecache.cache[self.filename]
 
 
 class DebuggerService(pb2_grpc.DebuggerServiceServicer):
@@ -141,25 +157,24 @@ class DebuggerService(pb2_grpc.DebuggerServiceServicer):
 
     def CreateSession(self, request, context):
         session_id = str(uuid.uuid4())
-        filename = None
-        data = None
-
-        if request.HasField("session_create_from_file"):
-            filename = request.session_create_from_file.file
-        elif request.HasField("session_create_from_data"):
-            data = request.session_create_from_data.data
-
-        session = DebuggerSession(session_id, filename=filename, data=data)
-
+        session = DebuggerSession(session_id)
         with self.sessions_lock:
             self.sessions[session_id] = session
-
         return pb2.Session(id=session_id)
 
     def ListSessions(self, request, context):
         with self.sessions_lock:
             sessions = [pb2.Session(id=sid) for sid in self.sessions.keys()]
         return pb2.Sessions(sessions=sessions)
+
+    def SetSource(self, request, context):
+        session = self._get_session(request.session.id)
+        if not session:
+            context.abort(grpc.StatusCode.NOT_FOUND, "Session not found")
+
+        session.data = request.data
+        session.filename = request.filename
+        return Empty()
 
     def Start(self, request, context):
         session = self._get_session(request.id)
@@ -189,18 +204,32 @@ class DebuggerService(pb2_grpc.DebuggerServiceServicer):
         session.running = False
         return Empty()
 
-    def SetBreakpoint(self, request, context):
+    def AddBreakpoint(self, request, context):
         session = self._get_session(request.session.id)
         if not session:
             context.abort(grpc.StatusCode.NOT_FOUND, "Session not found")
 
-        session.debugger.clear_all_breaks()
-        session.breakpoints.clear()
+        bp = request.breakpoint
+        if (err := session.debugger.set_break(bp.filename, bp.lineno)) is not None:
+            context.abort(grpc.StatusCode.NOT_FOUND, f"Cannot add breakpoint: {err}")
 
-        for bp in request.breakpoints.breakpoints:
-            session.debugger.set_break(bp.filename, bp.lineno)
-            session.breakpoints.append(bp)
+        session.breakpoints.append(bp)
+        return Empty()
 
+    def RemoveBreakpoint(self, request, context):
+        session = self._get_session(request.session.id)
+        if not session:
+            context.abort(grpc.StatusCode.NOT_FOUND, "Session not found")
+
+        bp = request.breakpoint
+        if (err := session.debugger.clear_break(bp.filename, bp.lineno)) is not None:
+            context.abort(grpc.StatusCode.NOT_FOUND, f"Cannot add breakpoint: {err}")
+
+        session.breakpoints = [
+            b
+            for b in session.breakpoints
+            if not (b.filename == bp.filename and b.lineno == bp.lineno)
+        ]
         return Empty()
 
     def GetBreakpoints(self, request, context):

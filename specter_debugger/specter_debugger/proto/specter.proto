@@ -1,34 +1,29 @@
 syntax = "proto3";
 
 import "google/protobuf/empty.proto";
-import "google/protobuf/struct.proto";
 
 package specter_debugger_proto;
 
 // ---------------------------- DebuggerService ------------------------------ //
 
 service DebuggerService {
-    rpc CreateSession(SessionCreate) returns (Session);
+    rpc CreateSession(google.protobuf.Empty) returns (Session);
     rpc ListSessions(google.protobuf.Empty) returns (Sessions);
+
+    rpc SetSource(SourceSet) returns (google.protobuf.Empty);
 
     rpc Start(Session) returns (google.protobuf.Empty);
     rpc Pause(Session) returns (google.protobuf.Empty);
     rpc Stop(Session) returns (google.protobuf.Empty);
 
-    rpc SetBreakpoint(BreakpointsSet) returns (google.protobuf.Empty);
+    rpc AddBreakpoint(BreakpointAdd) returns (google.protobuf.Empty);
+    rpc RemoveBreakpoint(BreakpointRemove) returns (google.protobuf.Empty);
     rpc GetBreakpoints(Session) returns (Breakpoints);
 
     rpc ListenEvents(Session) returns (stream Event);
 }
 
 // -------------------------------- Messages --------------------------------- //
-
-message SessionCreate {
-    oneof create {
-        SessionCreateFromFile session_create_from_file = 1;
-        SessionCreateFromData session_create_from_data = 2;
-    }
-}
 
 message SessionCreateFromFile {
     string file = 1;
@@ -46,6 +41,12 @@ message Sessions {
     repeated Session sessions = 1;
 }
 
+message SourceSet {
+    Session session = 1;
+    string filename = 2;
+    bytes data = 3;
+}
+
 message Breakpoint {
     string filename = 1;
     int32 lineno = 2;
@@ -55,17 +56,23 @@ message Breakpoints {
     repeated Breakpoint breakpoints = 1;
 }
 
-message BreakpointsSet {
+message BreakpointAdd {
     Session session = 1;
-    Breakpoints breakpoints = 2;
+    Breakpoint breakpoint = 2;
+}
+
+message BreakpointRemove {
+    Session session = 1;
+    Breakpoint breakpoint = 2;
 }
 
 message Event {
     oneof event {
         LineChangedEvent line_changed_event = 1;
-        DebugSessionFinishedEvent debug_session_finished_event = 2;
-        StdoutEvent stdout_event = 3;
-        StderrEvent stderr_event = 4;
+        FinishedEvent finished_event = 2;
+        StartedEvent started_event = 3;
+        StdoutEvent stdout_event = 4;
+        StderrEvent stderr_event = 5;
     }
 }
 
@@ -74,7 +81,11 @@ message LineChangedEvent {
     int32 lineno = 2;
 }
 
-message DebugSessionFinishedEvent {
+message FinishedEvent {
+    string status = 1;
+}
+
+message StartedEvent {
 }
 
 message StdoutEvent {

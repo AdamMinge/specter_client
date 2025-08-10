@@ -22,6 +22,11 @@ def create_server_parser(subparsers) -> argparse.ArgumentParser:
         default=SPECTER_DEBUGGER_SERVER_PORT,
         help=f"Port for server (default {SPECTER_DEBUGGER_SERVER_PORT})",
     )
+    server_parser.add_argument(
+        "--autostart",
+        action="store_true",
+        help="Start server immediately without CLI prompt",
+    )
 
     return server_parser
 
@@ -64,12 +69,12 @@ def main():
     address = f"{args.host}:{args.port}"
 
     if args.mode == "server":
-        cli = DebuggerServerCLI(address)
+        cli = DebuggerServerCLI(address, args.autostart)
         cli.run()
 
     elif args.mode == "client":
-        client = DebuggerClientCLI(address)
-        client.run()
+        cli = DebuggerClientCLI(address)
+        cli.run()
 
 
 if __name__ == "__main__":
