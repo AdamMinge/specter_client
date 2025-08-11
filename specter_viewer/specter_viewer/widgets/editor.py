@@ -1,5 +1,6 @@
 import subprocess
 import functools
+import json
 
 from PySide6.QtWidgets import (
     QDockWidget,
@@ -10,18 +11,9 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QSizePolicy,
     QToolButton,
+    QApplication,
 )
-from PySide6.QtCore import (
-    Qt,
-    QObject,
-    QMetaObject,
-    QRegularExpression,
-    QSize,
-    Slot,
-    Signal,
-    QRect,
-    Q_ARG,
-)
+from PySide6.QtCore import Qt, QObject, QSize, Signal, QRect, QFile, QIODevice
 from PySide6.QtGui import (
     QSyntaxHighlighter,
     QTextCharFormat,
@@ -38,6 +30,8 @@ from PySide6.QtGui import (
     QPen,
 )
 
+from textmate import TextMateGrammarRepository, TextMateGrammar
+
 from specter.client import Client
 from specter_debugger import DebuggerClient
 
@@ -48,197 +42,102 @@ from specter_viewer.constants import (
 )
 
 
+def tx_format(color, style=""):
+    _format = QTextCharFormat()
+
+    if isinstance(color, str):
+        _color = QColor()
+        _color.setNamedColor(color)
+        _format.setForeground(_color)
+    else:
+        _format.setForeground(color)
+
+    if "bold" in style:
+        _format.setFontWeight(QFont.Bold)
+    if "italic" in style:
+        _format.setFontItalic(True)
+
+    return _format
+
+
+STYLES_DARK = {
+    "keyword": tx_format(QColor(86, 156, 214), "bold"),
+    "defclass": tx_format(QColor(220, 220, 170), "bold"),
+    "string": tx_format(QColor(206, 145, 120)),
+    "comment": tx_format(QColor(106, 153, 85), "italic"),
+    "numbers": tx_format(QColor(181, 206, 168)),
+    "type": tx_format(QColor(78, 201, 176)),
+    "typeparam": tx_format(QColor(156, 220, 254)),
+    "fexpr": tx_format(QColor(220, 220, 170)),
+}
+
+STYLES_LIGHT = {
+    "keyword": tx_format("blue", "bold"),
+    "defclass": tx_format("darkMagenta", "bold"),
+    "string": tx_format("brown"),
+    "comment": tx_format("darkGreen", "italic"),
+    "numbers": tx_format("darkRed"),
+    "type": tx_format("teal"),
+    "typeparam": tx_format("navy"),
+    "fexpr": tx_format("black"),
+}
+
+
+def is_dark():
+    app = QApplication.instance()
+    if hasattr(app, "styleHints") and hasattr(app.styleHints(), "colorScheme"):
+        return app.styleHints().colorScheme().value == 2
+    return False
+
+
 class PythonHighlighter(QSyntaxHighlighter):
     def __init__(self, document):
         super().__init__(document)
+        self.STYLES = STYLES_DARK if is_dark() else STYLES_LIGHT
 
-        keyword_format = QTextCharFormat()
-        keyword_format.setForeground(QColor(Qt.darkBlue))
-        keyword_format.setFontWeight(QFont.Bold)
+        repository = self._load_repository()
+        python_grammar_data = repository.get_grammar_by_language("python")
+        self.grammar = TextMateGrammar(python_grammar_data, repository)
 
-        keywords = [
-            "False",
-            "None",
-            "True",
-            "and",
-            "as",
-            "assert",
-            "async",
-            "await",
-            "break",
-            "class",
-            "continue",
-            "def",
-            "del",
-            "elif",
-            "else",
-            "except",
-            "finally",
-            "for",
-            "from",
-            "global",
-            "if",
-            "import",
-            "in",
-            "is",
-            "lambda",
-            "nonlocal",
-            "not",
-            "or",
-            "pass",
-            "raise",
-            "return",
-            "try",
-            "while",
-            "with",
-            "yield",
+        self.scope_map = {
+            "keyword": "keyword",
+            "entity.name.function": "defclass",
+            "entity.name.class": "defclass",
+            "string": "string",
+            "comment": "comment",
+            "constant.numeric": "numbers",
+            "support.type": "type",
+            "variable.parameter": "typeparam",
+            "meta.fstring": "fexpr",
+        }
+
+    def _load_repository(self):
+        grammar_files = [
+            ":/tm/MagicPython.tmLanguage.json",
         ]
-        self._rules = []
-        for word in keywords:
-            self._rules.append((r"\b" + word + r"\b", keyword_format))
+        return TextMateGrammarRepository([self.load_json(f) for f in grammar_files])
 
-        builtin_format = QTextCharFormat()
-        builtin_format.setForeground(QColor(Qt.darkMagenta))
-        builtin_format.setFontWeight(QFont.Bold)
-        builtins = [
-            "abs",
-            "all",
-            "any",
-            "ascii",
-            "bin",
-            "bool",
-            "bytearray",
-            "bytes",
-            "callable",
-            "chr",
-            "classmethod",
-            "compile",
-            "complex",
-            "delattr",
-            "dict",
-            "dir",
-            "divmod",
-            "enumerate",
-            "eval",
-            "exec",
-            "filter",
-            "float",
-            "format",
-            "frozenset",
-            "getattr",
-            "globals",
-            "hasattr",
-            "hash",
-            "help",
-            "hex",
-            "id",
-            "input",
-            "int",
-            "isinstance",
-            "issubclass",
-            "iter",
-            "len",
-            "list",
-            "locals",
-            "map",
-            "max",
-            "memoryview",
-            "min",
-            "next",
-            "object",
-            "oct",
-            "open",
-            "ord",
-            "pow",
-            "print",
-            "property",
-            "range",
-            "repr",
-            "reversed",
-            "round",
-            "set",
-            "setattr",
-            "slice",
-            "sorted",
-            "staticmethod",
-            "str",
-            "sum",
-            "super",
-            "tuple",
-            "type",
-            "vars",
-            "zip",
-        ]
-        for word in builtins:
-            self._rules.append((r"\b" + word + r"\b", builtin_format))
-
-        string_format = QTextCharFormat()
-        string_format.setForeground(QColor(Qt.darkGreen))
-        self._rules.append((r'".*?"', string_format))
-        self._rules.append((r"'.*?'", string_format))
-
-        number_format = QTextCharFormat()
-        number_format.setForeground(QColor(Qt.darkCyan))
-        self._rules.append((r"\b[0-9]+\b", number_format))
-        self._rules.append((r"\b[0-9]*\.[0-9]+\b", number_format))
-
-        comment_format = QTextCharFormat()
-        comment_format.setForeground(QColor(Qt.gray))
-        comment_format.setFontItalic(True)
-        self._rules.append((r"#.*", comment_format))
-
-        class_function_format = QTextCharFormat()
-        class_function_format.setForeground(QColor(Qt.darkRed))
-        class_function_format.setFontWeight(QFont.Bold)
-        self._rules.append((r"\bclass\s+[A-Za-z_][A-Za-z0-9_]*", class_function_format))
-        self._rules.append((r"\bdef\s+[A-Za-z_][A-Za-z0-9_]*", class_function_format))
-
-        self._multi_line_comment_format = QTextCharFormat()
-        self._multi_line_comment_format.setForeground(QColor(Qt.gray))
-        self._multi_line_comment_format.setFontItalic(True)
-
-        self._triple_quotes_regex_pattern = r'"""|\'\'\''
+    @staticmethod
+    def load_json(filepath):
+        file = QFile(filepath)
+        if not file.open(QIODevice.ReadOnly | QIODevice.Text):
+            raise FileNotFoundError(
+                f"Resource {filepath} not found or cannot be opened"
+            )
+        data = file.readAll().data()
+        file.close()
+        return json.loads(data.decode("utf-8"))
 
     def highlightBlock(self, text):
-        for pattern_string, format in self._rules:
-            expression = QRegularExpression(pattern_string)
-            it = expression.globalMatch(text)
-            while it.hasNext():
-                match = it.next()
-                self.setFormat(match.capturedStart(), match.capturedLength(), format)
+        tokens = self.grammar.parse(text)
 
-        self.setCurrentBlockState(0)
-
-        startIndex = 0
-        if self.previousBlockState() != 1:
-            triple_quotes_re = QRegularExpression(self._triple_quotes_regex_pattern)
-            match = triple_quotes_re.match(text)
-            if match.hasMatch():
-                startIndex = match.capturedStart()
-            else:
-                startIndex = -1
-        else:
-            startIndex = 0
-
-        while startIndex >= 0:
-            triple_quotes_re = QRegularExpression(self._triple_quotes_regex_pattern)
-            end_match = triple_quotes_re.match(text, startIndex + 3)
-
-            if not end_match.hasMatch():
-                self.setCurrentBlockState(1)
-                commentLength = len(text) - startIndex
-            else:
-                endIndex = end_match.capturedStart()
-                commentLength = endIndex - startIndex + end_match.capturedLength()
-                self.setCurrentBlockState(0)
-
-            self.setFormat(startIndex, commentLength, self._multi_line_comment_format)
-
-            next_start_match = triple_quotes_re.match(text, startIndex + commentLength)
-            if next_start_match.hasMatch():
-                startIndex = next_start_match.capturedStart()
-            else:
-                startIndex = -1
+        for scope, (start, end) in tokens:
+            for prefix, style_key in self.scope_map.items():
+                if scope.startswith(prefix):
+                    fmt = self.STYLES.get(style_key)
+                    if fmt:
+                        self.setFormat(start, end - start, fmt)
+                    break
 
 
 class LineNumberArea(QWidget):
@@ -459,13 +358,17 @@ class CodeEditor(QPlainTextEdit):
         )
 
 
+SOURCE_CODE_FILE_NAME = "<string>"
+
+
 def returns_bool_on_exception(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         try:
             func(*args, **kwargs)
             return True
-        except Exception:
+        except Exception as e:
+            print(f"func = {func} | e = {e}")
             return False
 
     return wrapper
@@ -473,6 +376,7 @@ def returns_bool_on_exception(func):
 
 class SpecterDebugger(QObject):
     code_started = Signal()
+    code_paused = Signal()
     code_finished = Signal(str)
     current_line_changed = Signal(int)
     output_received = Signal(str)
@@ -505,6 +409,7 @@ class SpecterDebugger(QObject):
             session = self._client.create_session()
             self._session_id = session.id
             self._client.listen_events(self._session_id, self._on_event)
+            self._client.set_source(self._session_id, SOURCE_CODE_FILE_NAME, "")
 
         return self._client
 
@@ -523,6 +428,9 @@ class SpecterDebugger(QObject):
 
         elif event_type == "started_event":
             self.code_started.emit()
+
+        elif event_type == "paused_event":
+            self.code_paused.emit()
 
         elif event_type == "stdout_event":
             stdout_event = event.stdout_event
@@ -544,17 +452,23 @@ class SpecterDebugger(QObject):
 
     @returns_bool_on_exception
     def resume(self):
-        pass
+        self.client.resume(self._session_id)
 
     @returns_bool_on_exception
     def set_source(self, source: str):
-        self.client.set_source(self._session_id, "<string>", source.encode("utf-8"))
+        self.client.set_source(
+            self._session_id, SOURCE_CODE_FILE_NAME, source.encode("utf-8")
+        )
 
+    @returns_bool_on_exception
     def add_breakpoint(self, breakpoint: int):
-        self.client.add_breakpoint(self._session_id, "<string>", breakpoint)
+        self.client.add_breakpoint(self._session_id, SOURCE_CODE_FILE_NAME, breakpoint)
 
+    @returns_bool_on_exception
     def remove_breakpoint(self, breakpoint: int):
-        self.client.remove_breakpoint(self._session_id, "<string>", breakpoint)
+        self.client.remove_breakpoint(
+            self._session_id, SOURCE_CODE_FILE_NAME, breakpoint
+        )
 
 
 class EditorDock(QDockWidget):
@@ -627,6 +541,7 @@ class EditorDock(QDockWidget):
 
         self._debugger.code_started.connect(self._on_code_started)
         self._debugger.code_finished.connect(self._on_code_finished)
+        self._debugger.code_paused.connect(self.on_code_paused)
         self._debugger.current_line_changed.connect(self._on_current_line_changed)
         self._debugger.output_received.connect(self._on_output_received)
         self._debugger.error_occurred.connect(self._on_error_occurred)
@@ -671,6 +586,9 @@ class EditorDock(QDockWidget):
         self._output_console.append(f"--- Code Execution Finished ({status}) ---\n")
         self._update_states(running=False, paused=False)
         self._code_editor.clear_highlighting()
+
+    def on_code_paused(self):
+        self._update_states(running=True, paused=True)
 
     def _on_current_line_changed(self, line_number: int):
         self._code_editor.highlight_executed_line(line_number)

@@ -57,6 +57,11 @@ class DebuggerServiceStub(object):
                 request_serializer=specter__debugger_dot_proto_dot_specter__pb2.Session.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
+        self.Resume = channel.unary_unary(
+                '/specter_debugger_proto.DebuggerService/Resume',
+                request_serializer=specter__debugger_dot_proto_dot_specter__pb2.Session.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
         self.Pause = channel.unary_unary(
                 '/specter_debugger_proto.DebuggerService/Pause',
                 request_serializer=specter__debugger_dot_proto_dot_specter__pb2.Session.SerializeToString,
@@ -118,6 +123,12 @@ class DebuggerServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def Resume(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def Pause(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -174,6 +185,11 @@ def add_DebuggerServiceServicer_to_server(servicer, server):
             ),
             'Start': grpc.unary_unary_rpc_method_handler(
                     servicer.Start,
+                    request_deserializer=specter__debugger_dot_proto_dot_specter__pb2.Session.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'Resume': grpc.unary_unary_rpc_method_handler(
+                    servicer.Resume,
                     request_deserializer=specter__debugger_dot_proto_dot_specter__pb2.Session.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
@@ -316,6 +332,33 @@ class DebuggerService(object):
             request,
             target,
             '/specter_debugger_proto.DebuggerService/Start',
+            specter__debugger_dot_proto_dot_specter__pb2.Session.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def Resume(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/specter_debugger_proto.DebuggerService/Resume',
             specter__debugger_dot_proto_dot_specter__pb2.Session.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,

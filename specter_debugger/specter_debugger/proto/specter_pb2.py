@@ -25,43 +25,43 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n$specter_debugger/proto/specter.proto\x12\x16specter_debugger_proto\x1a\x1bgoogle/protobuf/empty.proto\"%\n\x15SessionCreateFromFile\x12\x0c\n\x04\x66ile\x18\x01 \x01(\t\"%\n\x15SessionCreateFromData\x12\x0c\n\x04\x64\x61ta\x18\x01 \x01(\x0c\"\x15\n\x07Session\x12\n\n\x02id\x18\x01 \x01(\t\"=\n\x08Sessions\x12\x31\n\x08sessions\x18\x01 \x03(\x0b\x32\x1f.specter_debugger_proto.Session\"]\n\tSourceSet\x12\x30\n\x07session\x18\x01 \x01(\x0b\x32\x1f.specter_debugger_proto.Session\x12\x10\n\x08\x66ilename\x18\x02 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\x0c\".\n\nBreakpoint\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\x12\x0e\n\x06lineno\x18\x02 \x01(\x05\"F\n\x0b\x42reakpoints\x12\x37\n\x0b\x62reakpoints\x18\x01 \x03(\x0b\x32\".specter_debugger_proto.Breakpoint\"y\n\rBreakpointAdd\x12\x30\n\x07session\x18\x01 \x01(\x0b\x32\x1f.specter_debugger_proto.Session\x12\x36\n\nbreakpoint\x18\x02 \x01(\x0b\x32\".specter_debugger_proto.Breakpoint\"|\n\x10\x42reakpointRemove\x12\x30\n\x07session\x18\x01 \x01(\x0b\x32\x1f.specter_debugger_proto.Session\x12\x36\n\nbreakpoint\x18\x02 \x01(\x0b\x32\".specter_debugger_proto.Breakpoint\"\xd2\x02\n\x05\x45vent\x12\x46\n\x12line_changed_event\x18\x01 \x01(\x0b\x32(.specter_debugger_proto.LineChangedEventH\x00\x12?\n\x0e\x66inished_event\x18\x02 \x01(\x0b\x32%.specter_debugger_proto.FinishedEventH\x00\x12=\n\rstarted_event\x18\x03 \x01(\x0b\x32$.specter_debugger_proto.StartedEventH\x00\x12;\n\x0cstdout_event\x18\x04 \x01(\x0b\x32#.specter_debugger_proto.StdoutEventH\x00\x12;\n\x0cstderr_event\x18\x05 \x01(\x0b\x32#.specter_debugger_proto.StderrEventH\x00\x42\x07\n\x05\x65vent\"4\n\x10LineChangedEvent\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\x12\x0e\n\x06lineno\x18\x02 \x01(\x05\"\x1f\n\rFinishedEvent\x12\x0e\n\x06status\x18\x01 \x01(\t\"\x0e\n\x0cStartedEvent\"\x1e\n\x0bStdoutEvent\x12\x0f\n\x07message\x18\x01 \x01(\t\"\x1e\n\x0bStderrEvent\x12\x0f\n\x07message\x18\x01 \x01(\t2\x82\x06\n\x0f\x44\x65\x62uggerService\x12H\n\rCreateSession\x12\x16.google.protobuf.Empty\x1a\x1f.specter_debugger_proto.Session\x12H\n\x0cListSessions\x12\x16.google.protobuf.Empty\x1a .specter_debugger_proto.Sessions\x12\x46\n\tSetSource\x12!.specter_debugger_proto.SourceSet\x1a\x16.google.protobuf.Empty\x12@\n\x05Start\x12\x1f.specter_debugger_proto.Session\x1a\x16.google.protobuf.Empty\x12@\n\x05Pause\x12\x1f.specter_debugger_proto.Session\x1a\x16.google.protobuf.Empty\x12?\n\x04Stop\x12\x1f.specter_debugger_proto.Session\x1a\x16.google.protobuf.Empty\x12N\n\rAddBreakpoint\x12%.specter_debugger_proto.BreakpointAdd\x1a\x16.google.protobuf.Empty\x12T\n\x10RemoveBreakpoint\x12(.specter_debugger_proto.BreakpointRemove\x1a\x16.google.protobuf.Empty\x12V\n\x0eGetBreakpoints\x12\x1f.specter_debugger_proto.Session\x1a#.specter_debugger_proto.Breakpoints\x12P\n\x0cListenEvents\x12\x1f.specter_debugger_proto.Session\x1a\x1d.specter_debugger_proto.Event0\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n$specter_debugger/proto/specter.proto\x12\x16specter_debugger_proto\x1a\x1bgoogle/protobuf/empty.proto\"\x15\n\x07Session\x12\n\n\x02id\x18\x01 \x01(\t\"=\n\x08Sessions\x12\x31\n\x08sessions\x18\x01 \x03(\x0b\x32\x1f.specter_debugger_proto.Session\"]\n\tSourceSet\x12\x30\n\x07session\x18\x01 \x01(\x0b\x32\x1f.specter_debugger_proto.Session\x12\x10\n\x08\x66ilename\x18\x02 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\x0c\".\n\nBreakpoint\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\x12\x0e\n\x06lineno\x18\x02 \x01(\x05\"F\n\x0b\x42reakpoints\x12\x37\n\x0b\x62reakpoints\x18\x01 \x03(\x0b\x32\".specter_debugger_proto.Breakpoint\"y\n\rBreakpointAdd\x12\x30\n\x07session\x18\x01 \x01(\x0b\x32\x1f.specter_debugger_proto.Session\x12\x36\n\nbreakpoint\x18\x02 \x01(\x0b\x32\".specter_debugger_proto.Breakpoint\"|\n\x10\x42reakpointRemove\x12\x30\n\x07session\x18\x01 \x01(\x0b\x32\x1f.specter_debugger_proto.Session\x12\x36\n\nbreakpoint\x18\x02 \x01(\x0b\x32\".specter_debugger_proto.Breakpoint\"\xce\x03\n\x05\x45vent\x12\x46\n\x12line_changed_event\x18\x01 \x01(\x0b\x32(.specter_debugger_proto.LineChangedEventH\x00\x12=\n\rstarted_event\x18\x02 \x01(\x0b\x32$.specter_debugger_proto.StartedEventH\x00\x12;\n\x0cpaused_event\x18\x03 \x01(\x0b\x32#.specter_debugger_proto.PausedEventH\x00\x12=\n\rresumed_event\x18\x04 \x01(\x0b\x32$.specter_debugger_proto.ResumedEventH\x00\x12?\n\x0e\x66inished_event\x18\x05 \x01(\x0b\x32%.specter_debugger_proto.FinishedEventH\x00\x12;\n\x0cstdout_event\x18\x06 \x01(\x0b\x32#.specter_debugger_proto.StdoutEventH\x00\x12;\n\x0cstderr_event\x18\x07 \x01(\x0b\x32#.specter_debugger_proto.StderrEventH\x00\x42\x07\n\x05\x65vent\"4\n\x10LineChangedEvent\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\x12\x0e\n\x06lineno\x18\x02 \x01(\x05\"\x0e\n\x0cStartedEvent\"\r\n\x0bPausedEvent\"\x0e\n\x0cResumedEvent\"\x1f\n\rFinishedEvent\x12\x0e\n\x06status\x18\x01 \x01(\t\"\x1e\n\x0bStdoutEvent\x12\x0f\n\x07message\x18\x01 \x01(\t\"\x1e\n\x0bStderrEvent\x12\x0f\n\x07message\x18\x01 \x01(\t2\xc5\x06\n\x0f\x44\x65\x62uggerService\x12H\n\rCreateSession\x12\x16.google.protobuf.Empty\x1a\x1f.specter_debugger_proto.Session\x12H\n\x0cListSessions\x12\x16.google.protobuf.Empty\x1a .specter_debugger_proto.Sessions\x12\x46\n\tSetSource\x12!.specter_debugger_proto.SourceSet\x1a\x16.google.protobuf.Empty\x12@\n\x05Start\x12\x1f.specter_debugger_proto.Session\x1a\x16.google.protobuf.Empty\x12\x41\n\x06Resume\x12\x1f.specter_debugger_proto.Session\x1a\x16.google.protobuf.Empty\x12@\n\x05Pause\x12\x1f.specter_debugger_proto.Session\x1a\x16.google.protobuf.Empty\x12?\n\x04Stop\x12\x1f.specter_debugger_proto.Session\x1a\x16.google.protobuf.Empty\x12N\n\rAddBreakpoint\x12%.specter_debugger_proto.BreakpointAdd\x1a\x16.google.protobuf.Empty\x12T\n\x10RemoveBreakpoint\x12(.specter_debugger_proto.BreakpointRemove\x1a\x16.google.protobuf.Empty\x12V\n\x0eGetBreakpoints\x12\x1f.specter_debugger_proto.Session\x1a#.specter_debugger_proto.Breakpoints\x12P\n\x0cListenEvents\x12\x1f.specter_debugger_proto.Session\x1a\x1d.specter_debugger_proto.Event0\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'specter_debugger.proto.specter_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_SESSIONCREATEFROMFILE']._serialized_start=93
-  _globals['_SESSIONCREATEFROMFILE']._serialized_end=130
-  _globals['_SESSIONCREATEFROMDATA']._serialized_start=132
-  _globals['_SESSIONCREATEFROMDATA']._serialized_end=169
-  _globals['_SESSION']._serialized_start=171
-  _globals['_SESSION']._serialized_end=192
-  _globals['_SESSIONS']._serialized_start=194
-  _globals['_SESSIONS']._serialized_end=255
-  _globals['_SOURCESET']._serialized_start=257
-  _globals['_SOURCESET']._serialized_end=350
-  _globals['_BREAKPOINT']._serialized_start=352
-  _globals['_BREAKPOINT']._serialized_end=398
-  _globals['_BREAKPOINTS']._serialized_start=400
-  _globals['_BREAKPOINTS']._serialized_end=470
-  _globals['_BREAKPOINTADD']._serialized_start=472
-  _globals['_BREAKPOINTADD']._serialized_end=593
-  _globals['_BREAKPOINTREMOVE']._serialized_start=595
-  _globals['_BREAKPOINTREMOVE']._serialized_end=719
-  _globals['_EVENT']._serialized_start=722
-  _globals['_EVENT']._serialized_end=1060
-  _globals['_LINECHANGEDEVENT']._serialized_start=1062
-  _globals['_LINECHANGEDEVENT']._serialized_end=1114
-  _globals['_FINISHEDEVENT']._serialized_start=1116
-  _globals['_FINISHEDEVENT']._serialized_end=1147
-  _globals['_STARTEDEVENT']._serialized_start=1149
-  _globals['_STARTEDEVENT']._serialized_end=1163
-  _globals['_STDOUTEVENT']._serialized_start=1165
-  _globals['_STDOUTEVENT']._serialized_end=1195
-  _globals['_STDERREVENT']._serialized_start=1197
-  _globals['_STDERREVENT']._serialized_end=1227
-  _globals['_DEBUGGERSERVICE']._serialized_start=1230
-  _globals['_DEBUGGERSERVICE']._serialized_end=2000
+  _globals['_SESSION']._serialized_start=93
+  _globals['_SESSION']._serialized_end=114
+  _globals['_SESSIONS']._serialized_start=116
+  _globals['_SESSIONS']._serialized_end=177
+  _globals['_SOURCESET']._serialized_start=179
+  _globals['_SOURCESET']._serialized_end=272
+  _globals['_BREAKPOINT']._serialized_start=274
+  _globals['_BREAKPOINT']._serialized_end=320
+  _globals['_BREAKPOINTS']._serialized_start=322
+  _globals['_BREAKPOINTS']._serialized_end=392
+  _globals['_BREAKPOINTADD']._serialized_start=394
+  _globals['_BREAKPOINTADD']._serialized_end=515
+  _globals['_BREAKPOINTREMOVE']._serialized_start=517
+  _globals['_BREAKPOINTREMOVE']._serialized_end=641
+  _globals['_EVENT']._serialized_start=644
+  _globals['_EVENT']._serialized_end=1106
+  _globals['_LINECHANGEDEVENT']._serialized_start=1108
+  _globals['_LINECHANGEDEVENT']._serialized_end=1160
+  _globals['_STARTEDEVENT']._serialized_start=1162
+  _globals['_STARTEDEVENT']._serialized_end=1176
+  _globals['_PAUSEDEVENT']._serialized_start=1178
+  _globals['_PAUSEDEVENT']._serialized_end=1191
+  _globals['_RESUMEDEVENT']._serialized_start=1193
+  _globals['_RESUMEDEVENT']._serialized_end=1207
+  _globals['_FINISHEDEVENT']._serialized_start=1209
+  _globals['_FINISHEDEVENT']._serialized_end=1240
+  _globals['_STDOUTEVENT']._serialized_start=1242
+  _globals['_STDOUTEVENT']._serialized_end=1272
+  _globals['_STDERREVENT']._serialized_start=1274
+  _globals['_STDERREVENT']._serialized_end=1304
+  _globals['_DEBUGGERSERVICE']._serialized_start=1307
+  _globals['_DEBUGGERSERVICE']._serialized_end=2144
 # @@protoc_insertion_point(module_scope)

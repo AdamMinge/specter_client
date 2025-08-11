@@ -13,6 +13,7 @@ service DebuggerService {
     rpc SetSource(SourceSet) returns (google.protobuf.Empty);
 
     rpc Start(Session) returns (google.protobuf.Empty);
+    rpc Resume(Session) returns (google.protobuf.Empty);
     rpc Pause(Session) returns (google.protobuf.Empty);
     rpc Stop(Session) returns (google.protobuf.Empty);
 
@@ -24,14 +25,6 @@ service DebuggerService {
 }
 
 // -------------------------------- Messages --------------------------------- //
-
-message SessionCreateFromFile {
-    string file = 1;
-}
-
-message SessionCreateFromData {
-    bytes data = 1;
-}
 
 message Session {
     string id = 1;
@@ -69,10 +62,12 @@ message BreakpointRemove {
 message Event {
     oneof event {
         LineChangedEvent line_changed_event = 1;
-        FinishedEvent finished_event = 2;
-        StartedEvent started_event = 3;
-        StdoutEvent stdout_event = 4;
-        StderrEvent stderr_event = 5;
+        StartedEvent started_event = 2;
+        PausedEvent paused_event = 3;
+        ResumedEvent resumed_event = 4;
+        FinishedEvent finished_event = 5;
+        StdoutEvent stdout_event = 6;
+        StderrEvent stderr_event = 7;
     }
 }
 
@@ -81,12 +76,19 @@ message LineChangedEvent {
     int32 lineno = 2;
 }
 
+message StartedEvent {
+}
+
+message PausedEvent {
+}
+
+message ResumedEvent {
+}
+
 message FinishedEvent {
     string status = 1;
 }
 
-message StartedEvent {
-}
 
 message StdoutEvent {
     string message = 1;

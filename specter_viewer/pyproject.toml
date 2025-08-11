@@ -9,6 +9,7 @@ authors = ["Adam Minge <minge.adam@gmail.com>"]
 [tool.poetry.dependencies]
 python = ">=3.12,<3.14"
 pyside6 = "^6.9"
+python-textmate = "^0.2"
 specter = {path = "../specter", develop=true}
 specter_debugger = {path = "../specter_debugger", develop=true}
 

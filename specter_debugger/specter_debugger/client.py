@@ -27,6 +27,9 @@ class DebuggerClient:
     def start(self, session_id):
         return self.stub.Start(pb2.Session(id=session_id))
 
+    def resume(self, session_id):
+        return self.stub.Resume(pb2.Session(id=session_id))
+
     def pause(self, session_id):
         return self.stub.Pause(pb2.Session(id=session_id))
 

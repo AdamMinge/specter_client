@@ -8,5 +8,7 @@
     <file>icons/pause.png</file>
     <file>icons/stop.png</file>
     <file>icons/select.png</file>
+
+    <file>tm/MagicPython.tmLanguage.json</file>
 </qresource>
 </RCC>
