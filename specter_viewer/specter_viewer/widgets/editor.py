@@ -409,7 +409,9 @@ class SpecterDebugger(QObject):
             session = self._client.create_session()
             self._session_id = session.id
             self._client.listen_events(self._session_id, self._on_event)
-            self._client.set_source(self._session_id, SOURCE_CODE_FILE_NAME, "")
+            self._client.set_source(
+                self._session_id, SOURCE_CODE_FILE_NAME, "".encode("utf-8")
+            )
 
         return self._client
 
