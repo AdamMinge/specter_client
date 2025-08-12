@@ -1,3 +1,5 @@
+import os
+
 from specter_debugger.client import DebuggerClient
 from specter_debugger.server import DebuggerServer
 
@@ -92,7 +94,7 @@ class DebuggerClientCLI:
         try:
             with open(filepath, "rb") as f:
                 data = f.read()
-            self.client.set_source(self.session_id, data)
+            self.client.set_source(self.session_id, os.path.basename(filepath), data)
             print(f"Source set from {filepath}")
         except Exception as e:
             print(f"Error setting source: {e}")
