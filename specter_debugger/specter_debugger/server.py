@@ -1,6 +1,7 @@
 import concurrent
 import threading
 import linecache
+import typing
 import queue
 import uuid
 import grpc
@@ -144,6 +145,17 @@ class DebuggerSession:
                 pb2.Event(finished_event=pb2.FinishedEvent(status=status))
             )
             self._running = False
+
+    def _get_globals(self) -> dict[str, typing.Any]:
+        import specter
+
+        custom_globals = globals()
+        custom_globals["specter"] = specter
+
+        return custom_globals
+
+    def _get_locals(self) -> dict[str, typing.Any]:
+        return locals()
 
     def set_source(self, filename: str, source: bytes):
         code = source.decode("utf-8")
