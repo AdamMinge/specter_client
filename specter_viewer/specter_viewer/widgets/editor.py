@@ -377,7 +377,6 @@ def returns_bool_on_exception(func):
             func(*args, **kwargs)
             return True
         except Exception as e:
-            print(f"func = {func} | e = {e}")
             return False
 
     return wrapper
@@ -577,18 +576,18 @@ class EditorDock(QDockWidget):
         self._code_editor.setReadOnly(running)
 
     def _on_start_clicked(self):
-        self._output_console.clear()
-        self._code_editor.clear_highlighting()
-        self._debugger.start()
-        self._update_states(running=True, paused=False)
+        if self._debugger.start():
+            self._output_console.clear()
+            self._code_editor.clear_highlighting()
+            self._update_states(running=True, paused=False)
 
     def _on_stop_clicked(self):
-        self._debugger.stop()
-        self._code_editor.clear_highlighting()
+        if self._debugger.stop():
+            self._code_editor.clear_highlighting()
 
     def _on_resume_clicked(self):
-        self._debugger.resume()
-        self._update_states(running=True, paused=False)
+        if self._debugger.resume():
+            self._update_states(running=True, paused=False)
 
     def _on_code_started(self):
         self._output_console.append("--- Code Execution Started ---\n")

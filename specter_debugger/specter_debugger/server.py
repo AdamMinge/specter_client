@@ -138,7 +138,7 @@ class DebuggerSession:
             self._event_queue.put(
                 pb2.Event(stderr_event=pb2.StderrEvent(message=f"Exception: {e}"))
             )
-            status = f"error: {e}"
+            status = f"error: exception was raised"
         finally:
             self._event_queue.put(
                 pb2.Event(finished_event=pb2.FinishedEvent(status=status))
