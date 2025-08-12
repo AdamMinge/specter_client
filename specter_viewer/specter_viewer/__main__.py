@@ -52,7 +52,6 @@ def main():
     try:
         client = attach_client(app)
     except Exception as e:
-        print(f"e = {e}")
         sys.exit(app.exit(1))
         return
 
