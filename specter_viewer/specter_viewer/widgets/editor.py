@@ -403,6 +403,7 @@ class SpecterDebugger(QObject):
                 str(SPECTER_VIEVER_DEBUGGER_PORT),
                 "--autostart",
             ],
+            stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
