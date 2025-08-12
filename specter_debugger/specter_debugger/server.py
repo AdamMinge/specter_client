@@ -108,7 +108,7 @@ class DebuggerSession:
 
         status = "success"
         try:
-            if not self._code:
+            if self._code is None:
                 self._event_queue.put(
                     pb2.Event(
                         stderr_event=pb2.StderrEvent(

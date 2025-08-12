@@ -28,6 +28,7 @@ from PySide6.QtGui import (
     QIcon,
     QPixmap,
     QPen,
+    QKeyEvent,
 )
 
 from textmate import TextMateGrammarRepository, TextMateGrammar
@@ -356,6 +357,14 @@ class CodeEditor(QPlainTextEdit):
         self._lineNumberArea.setGeometry(
             QRect(cr.left(), cr.top(), self.line_number_area_width(), cr.height())
         )
+
+    def keyPressEvent(self, event):
+        if (
+            event.key() in (Qt.Key_Enter, Qt.Key_Return)
+            and event.modifiers() == Qt.ShiftModifier
+        ):
+            event = QKeyEvent(event.type(), event.key(), Qt.NoModifier, event.text())
+        super().keyPressEvent(event)
 
 
 SOURCE_CODE_FILE_NAME = "<string>"
