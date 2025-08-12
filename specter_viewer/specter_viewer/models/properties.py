@@ -68,12 +68,6 @@ class PropertiesTreeItem(object):
             return self.parent_item.child_items.index(self)
         return 0
 
-    def print(self, indent: int = 0) -> None:
-        print("-" * indent, self.item_data)
-        for child in self.child_items:
-            assert isinstance(child, PropertiesTreeItem)
-            child.print(indent + 1)
-
 
 class HasNoDefaultError(Exception):
     """Raised when a field has no default value"""

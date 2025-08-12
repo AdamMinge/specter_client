@@ -561,7 +561,6 @@ class EditorDock(QDockWidget):
         try:
             btn.setIcon(QIcon(QPixmap(icon_path)))
         except Exception:
-            print(f"Warning: Icon not found at {icon_path}. Using default.")
             btn.setText(tooltip)
 
         btn.setToolTip(tooltip)
