@@ -16,13 +16,13 @@ class ScriptModule:
 
         start_time = time.time()
         while time.time() - start_time < timeout:
-            response = self.object_service_stub.Find(object_pb_request)
-            if response.objects:
-                found_object_pb = response.objects[0]
-                wrapper_class = ObjectWrapper.get_wrapper_class_for_query(
-                    found_object_pb.query
+            response = self._client.object_stub.Find(object_pb_request)
+
+            if len(response.ids) == 1:
+                found_object_pb = response.ids[0]
+                return ObjectWrapper.create_wrapper_object(
+                    self._client.object_stub, found_object_pb.id
                 )
-                return wrapper_class(self.object_service_stub, found_object_pb)
             time.sleep(0.5)
 
         raise TimeoutError(
