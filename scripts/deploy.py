@@ -38,6 +38,15 @@ def update_spec_file(module_path: pathlib.Path, spec_file: pathlib.Path):
     config["app"]["exec_directory"] = str(build_path)
     config["app"]["icon"] = str(icon_path)
 
+    current_extra_args = config.get("nuitka", "extra_args", fallback="").strip()
+    new_flag = "--no-deployment-flag=frame-useless-set-trace"
+
+    args_list = current_extra_args.split()
+    if new_flag not in args_list:
+        args_list.append(new_flag)
+
+    config["nuitka"]["extra_args"] = " ".join(args_list)
+
     with open(spec_file, "w") as f:
         config.write(f)
 

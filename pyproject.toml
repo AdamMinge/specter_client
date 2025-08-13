@@ -21,6 +21,7 @@ specter_viewer = { path = "specter_viewer", develop = true }
 
 [tool.poetry.group.dev.dependencies]
 grpcio-tools = "1.71.0"
+imageio = "2.37.0"
 
 [tool.poetry.scripts]
 build = "scripts.build:main"
