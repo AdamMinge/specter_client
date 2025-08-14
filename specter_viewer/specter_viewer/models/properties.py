@@ -552,14 +552,3 @@ class GRPCPropertiesModel(PropertiesModel):
                 return child_index
 
         return None
-
-
-class FilteredPropertiesTypeProxyModel(QSortFilterProxyModel):
-    def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
-        source_model = self.sourceModel()
-        index = source_model.index(source_row, 0, source_parent)
-        if not index.isValid():
-            return True
-
-        field_name = index.data(PropertiesModel.CustomDataRoles.AttributeNameRole)
-        return not (isinstance(field_name, str) and field_name.endswith("type"))

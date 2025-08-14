@@ -88,49 +88,49 @@ class ConsoleWidget(QWidget):
         ui_text_min_update_interval: float = 0.05,
     ) -> None:
         super().__init__(parent)
-        self.ui = Ui_ConsoleWidget()
-        self.ui.setupUi(self)
+        self._ui = Ui_ConsoleWidget()
+        self._ui.setupUi(self)
 
         self._display_max_blocks = display_max_blocks
-        self.ui.consoleTextEdit.setMaximumBlockCount(display_max_blocks)
+        self._ui.consoleTextEdit.setMaximumBlockCount(display_max_blocks)
         self._files_proxy_model = MultiColumnSortFilterProxyModel(self)
-        self.ui.fileSelectionTableView.setModel(self._files_proxy_model)
+        self._ui.fileSelectionTableView.setModel(self._files_proxy_model)
 
-        self.ui.fileSelectionTableView.sortByColumn(1, Qt.SortOrder.AscendingOrder)
+        self._ui.fileSelectionTableView.sortByColumn(1, Qt.SortOrder.AscendingOrder)
         self._files_proxy_model.sort_by_columns(
             [1, 0],
             [Qt.SortOrder.DescendingOrder, Qt.SortOrder.AscendingOrder],
         )
 
-        self.ui.fileSelectionTableView.hideColumn(1)
-        self.ui.fileSelectionTableView.hideColumn(2)
+        self._ui.fileSelectionTableView.hideColumn(1)
+        self._ui.fileSelectionTableView.hideColumn(2)
 
-        self.ui.fileSelectionTableView.verticalHeader().hide()
-        self.ui.fileSelectionTableView.horizontalHeader().hide()
+        self._ui.fileSelectionTableView.verticalHeader().hide()
+        self._ui.fileSelectionTableView.horizontalHeader().hide()
 
-        self.ui.fileSelectionTableView.setFrameShape(QFrame.Shape.NoFrame)
-        self.ui.fileSelectionTableView.setShowGrid(False)
+        self._ui.fileSelectionTableView.setFrameShape(QFrame.Shape.NoFrame)
+        self._ui.fileSelectionTableView.setShowGrid(False)
 
-        self.ui.fileSelectionTableView.horizontalHeader().setSectionResizeMode(
+        self._ui.fileSelectionTableView.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.Stretch
         )
 
         self.set_console_width_percentage(50)
 
-        self.ui.consoleTextEdit.setReadOnly(True)
+        self._ui.consoleTextEdit.setReadOnly(True)
 
-        self.ui.fileSelectionTableView.setSelectionBehavior(
+        self._ui.fileSelectionTableView.setSelectionBehavior(
             QAbstractItemView.SelectionBehavior.SelectRows
         )
-        self.ui.fileSelectionTableView.setSelectionMode(
+        self._ui.fileSelectionTableView.setSelectionMode(
             QAbstractItemView.SelectionMode.SingleSelection
         )
-        self.ui.fileSelectionTableView.mouseReleaseEvent = self.mouseReleaseEvent
+        self._ui.fileSelectionTableView.mouseReleaseEvent = self.mouseReleaseEvent
 
         self.file_selection_delegate = RecorderWidgetDelegate(
-            self.ui.fileSelectionTableView
+            self._ui.fileSelectionTableView
         )
-        self.ui.fileSelectionTableView.setItemDelegateForColumn(
+        self._ui.fileSelectionTableView.setItemDelegateForColumn(
             0, self.file_selection_delegate
         )
         self.file_selection_delegate.deleteHoverItem.connect(
@@ -138,9 +138,9 @@ class ConsoleWidget(QWidget):
         )
 
         self._current_linechange_connect = None
-        self.ui.fileSelectionTableView.viewport().setMouseTracking(True)
+        self._ui.fileSelectionTableView.viewport().setMouseTracking(True)
 
-        self.ui.fileSelectionTableView.selectionModel().selectionChanged.connect(
+        self._ui.fileSelectionTableView.selectionModel().selectionChanged.connect(
             self.selection_changed
         )
         self._ui_text_min_update_interval = ui_text_min_update_interval
@@ -153,10 +153,10 @@ class ConsoleWidget(QWidget):
             self._current_linechange_connect = None
 
         if len(selection.indexes()) == 0:
-            self.ui.consoleTextEdit.setPlainText("")
+            self._ui.consoleTextEdit.setPlainText("")
             return
         elif selection.indexes()[0].isValid():
-            self.ui.consoleTextEdit.setPlainText("")
+            self._ui.consoleTextEdit.setPlainText("")
             index = selection.indexes()[0]
             item = self._files_proxy_model.data(
                 index, role=Qt.ItemDataRole.UserRole + 1
@@ -172,8 +172,8 @@ class ConsoleWidget(QWidget):
             cur_line_list, from_index = item.get_current_line_list()
             self.process_line_change(cur_line_list, from_index)
 
-            self.ui.consoleTextEdit.verticalScrollBar().setValue(
-                self.ui.consoleTextEdit.verticalScrollBar().maximum()
+            self._ui.consoleTextEdit.verticalScrollBar().setValue(
+                self._ui.consoleTextEdit.verticalScrollBar().maximum()
             )
 
     @staticmethod
@@ -210,11 +210,11 @@ class ConsoleWidget(QWidget):
         start_line = max(from_line - self.currently_loaded_lines[0], 0)
 
         at_end_scrollbar = (
-            self.ui.consoleTextEdit.verticalScrollBar().value()
-            > self.ui.consoleTextEdit.verticalScrollBar().maximum() - 4
+            self._ui.consoleTextEdit.verticalScrollBar().value()
+            > self._ui.consoleTextEdit.verticalScrollBar().maximum() - 4
         )
 
-        cur_cursor = self.ui.consoleTextEdit.textCursor()
+        cur_cursor = self._ui.consoleTextEdit.textCursor()
         cur_cursor.movePosition(QTextCursor.MoveOperation.Start)
         cur_cursor.movePosition(
             QTextCursor.MoveOperation.Down,
@@ -225,12 +225,12 @@ class ConsoleWidget(QWidget):
         cur_cursor.insertText("".join([i + "\n" for i in new_line_list]))
 
         if at_end_scrollbar:
-            self.ui.consoleTextEdit.verticalScrollBar().setValue(
-                self.ui.consoleTextEdit.verticalScrollBar().maximum() - 1
+            self._ui.consoleTextEdit.verticalScrollBar().setValue(
+                self._ui.consoleTextEdit.verticalScrollBar().maximum() - 1
             )
         else:
-            self.ui.consoleTextEdit.verticalScrollBar().setValue(
-                self.ui.consoleTextEdit.verticalScrollBar().value() - shift
+            self._ui.consoleTextEdit.verticalScrollBar().setValue(
+                self._ui.consoleTextEdit.verticalScrollBar().value() - shift
             )
 
         self.currently_loaded_lines = new_loaded_lines
@@ -249,7 +249,7 @@ class ConsoleWidget(QWidget):
         original_index = self._files_proxy_model.mapToSource(index)
 
         selected_indexes = (
-            self.ui.fileSelectionTableView.selectionModel().selectedIndexes()
+            self._ui.fileSelectionTableView.selectionModel().selectedIndexes()
         )
         self._files_proxy_model.sourceModel().removeRow(
             original_index.row(), original_index.parent()
@@ -275,13 +275,13 @@ class ConsoleWidget(QWidget):
             else:
                 new_selected_row = selected_row
         if new_selected_row >= 0:
-            self.ui.fileSelectionTableView.setCurrentIndex(
+            self._ui.fileSelectionTableView.setCurrentIndex(
                 self._files_proxy_model.index(new_selected_row, 0)
             )
         else:
-            self.ui.fileSelectionTableView.selectionModel().clearSelection()
+            self._ui.fileSelectionTableView.selectionModel().clearSelection()
             self.selection_changed(
-                self.ui.fileSelectionTableView.selectionModel().selection()
+                self._ui.fileSelectionTableView.selectionModel().selection()
             )
 
     @staticmethod
@@ -306,26 +306,26 @@ class ConsoleWidget(QWidget):
 
     def set_model(self, model: QAbstractTableModel | QAbstractItemModel):
         self._files_proxy_model.setSourceModel(model)
-        self.ui.fileSelectionTableView.hideColumn(1)
-        self.ui.fileSelectionTableView.hideColumn(2)
+        self._ui.fileSelectionTableView.hideColumn(1)
+        self._ui.fileSelectionTableView.hideColumn(2)
 
     def get_console_width_percentage(self) -> int:
-        if self.ui.splitter.sizes()[0] == 0:
+        if self._ui.splitter.sizes()[0] == 0:
             return 0
-        elif self.ui.splitter.sizes()[1] == 0:
+        elif self._ui.splitter.sizes()[1] == 0:
             return 100
 
         return int(
-            self.ui.splitter.sizes()[0]
-            / (self.ui.splitter.sizes()[1] + self.ui.splitter.sizes()[0])
+            self._ui.splitter.sizes()[0]
+            / (self._ui.splitter.sizes()[1] + self._ui.splitter.sizes()[0])
             * 100
         )
 
     def set_console_width_percentage(self, percentage: int) -> None:
         percentage = max(1, min(100, percentage))
-        self.ui.splitter.setSizes([10 * percentage, 10 * (100 - percentage)])
-        self.ui.splitter.setStretchFactor(0, percentage)
-        self.ui.splitter.setStretchFactor(1, 100 - percentage)
+        self._ui.splitter.setSizes([10 * percentage, 10 * (100 - percentage)])
+        self._ui.splitter.setStretchFactor(0, percentage)
+        self._ui.splitter.setStretchFactor(1, 100 - percentage)
 
     ConsoleWidthPercentage = Property(
         int, get_console_width_percentage, set_console_width_percentage
@@ -385,7 +385,7 @@ class RecorderDock(QDockWidget):
         self._pause_button.clicked.connect(self._on_pause_recording)
         self._stop_button.clicked.connect(self._on_stop_recording)
 
-        self._view.ui.fileSelectionTableView.selectionModel().selectionChanged.connect(
+        self._view._ui.fileSelectionTableView.selectionModel().selectionChanged.connect(
             self._update_buttons
         )
 
@@ -405,7 +405,7 @@ class RecorderDock(QDockWidget):
         self._update_buttons()
 
     def _on_stop_recording(self):
-        index = self._view.ui.fileSelectionTableView.selectionModel().currentIndex()
+        index = self._view._ui.fileSelectionTableView.selectionModel().currentIndex()
         self._view.delete_file_selector_at_index(index)
 
     def _update_buttons(self):
@@ -421,7 +421,7 @@ class RecorderDock(QDockWidget):
         self._stop_button.setEnabled(console_item is not None)
 
     def _get_current_console_item(self) -> GRPCRecorderConsoleItem:
-        index = self._view.ui.fileSelectionTableView.selectionModel().currentIndex()
+        index = self._view._ui.fileSelectionTableView.selectionModel().currentIndex()
         console_item = self._view._files_proxy_model.data(
             index, role=Qt.ItemDataRole.UserRole + 1
         )

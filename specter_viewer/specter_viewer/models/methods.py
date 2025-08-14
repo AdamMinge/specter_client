@@ -529,18 +529,3 @@ class GRPCMethodsModel(MethodsModel):
             values.update(prop_values)
 
         return create_properties_dataclass(fields, values)
-
-
-class FilteredAttributeTypeProxyModel(QSortFilterProxyModel):
-    def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
-        source_model = self.sourceModel()
-        index = source_model.index(source_row, 0, source_parent)
-        if not index.isValid():
-            return True
-
-        item = index.data(MethodsModel.CustomDataRoles.TreeItemRole)
-        return not (
-            isinstance(item, PropertiesTreeItem)
-            and isinstance(item.name, str)
-            and item.name.endswith("type")
-        )

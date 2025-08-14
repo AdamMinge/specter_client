@@ -4,12 +4,14 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QTableView,
     QTreeView,
+    QLineEdit,
 )
 from PySide6.QtCore import Signal, Qt, QModelIndex
 
 from specter.client import Client
 
 from specter_viewer.models.objects import GRPCObjectsModel
+from specter_viewer.models.proxies import MultiColumnSortFilterProxyModel
 
 
 class ObjectsDock(QDockWidget):
@@ -23,19 +25,63 @@ class ObjectsDock(QDockWidget):
 
     def _init_ui(self):
         self._model = GRPCObjectsModel(self._client)
+        self._proxy_model = MultiColumnSortFilterProxyModel(self)
+        self._proxy_model.setSourceModel(self._model)
+        self._proxy_model.sort_by_columns(
+            [GRPCObjectsModel.Columns.Name],
+            [Qt.SortOrder.DescendingOrder],
+        )
+        self._proxy_model.set_filter_function("search_filter", self._search_filter)
+
+        self._search = QLineEdit()
+        self._search.setPlaceholderText("Search objects...")
+
         self._view = QTreeView()
-        self._view.setModel(self._model)
+        self._view.setModel(self._proxy_model)
         self._view.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
         self._view.setAlternatingRowColors(True)
 
         container = QWidget()
         layout = QVBoxLayout()
+        layout.addWidget(self._search)
         layout.addWidget(self._view)
         container.setLayout(layout)
         self.setWidget(container)
 
     def _init_connection(self):
         self._view.selectionModel().selectionChanged.connect(self._on_selection_changed)
+        self._search.textChanged.connect(self._on_search_text_changed)
+
+    def _search_filter(
+        self,
+        source_row: int,
+        source_parent: QModelIndex,
+        source_model: GRPCObjectsModel,
+    ):
+        search_text = self._search.text().strip().lower()
+        if not search_text:
+            return True
+
+        for col in (
+            GRPCObjectsModel.Columns.Name,
+            GRPCObjectsModel.Columns.Path,
+            GRPCObjectsModel.Columns.Type,
+            GRPCObjectsModel.Columns.Id,
+        ):
+            index = source_model.index(source_row, col, source_parent)
+            data = source_model.data(index, Qt.ItemDataRole.DisplayRole)
+            if data and search_text in str(data).lower():
+                return True
+
+        parent_index = source_model.index(source_row, 0, source_parent)
+        for i in range(source_model.rowCount(parent_index)):
+            if self._search_filter(i, parent_index, source_model):
+                return True
+
+        return False
+
+    def _on_search_text_changed(self):
+        self._proxy_model.invalidateFilter()
 
     def _on_selection_changed(self):
         selected_indexes = self._view.selectionModel().selectedIndexes()
@@ -43,10 +89,9 @@ class ObjectsDock(QDockWidget):
 
         object_id = None
         if selected_index.isValid():
+            source_index = self._proxy_model.mapToSource(selected_index)
             object_id = self._model.data(
-                selected_index.sibling(
-                    selected_index.row(), GRPCObjectsModel.Columns.Id
-                ),
+                source_index.sibling(source_index.row(), GRPCObjectsModel.Columns.Id),
                 Qt.ItemDataRole.DisplayRole,
             )
 

@@ -7,18 +7,19 @@ from PySide6.QtWidgets import (
     QTreeView,
     QMenu,
     QHeaderView,
+    QLineEdit,
 )
 from PySide6.QtCore import Qt, SignalInstance, QModelIndex, QAbstractItemModel, QPoint
 
 from specter.client import Client
 
-from specter_viewer.delegates import MethodButtonDelegate
+from specter_viewer.delegates.methods import MethodButtonDelegate
+from specter_viewer.models.proxies import MultiColumnSortFilterProxyModel
 from specter_viewer.models.methods import (
     MethodsModel,
     PropertiesTreeItem,
     HasNoDefaultError,
     GRPCMethodsModel,
-    FilteredAttributeTypeProxyModel,
 )
 
 
@@ -155,11 +156,22 @@ class MethodsDock(QDockWidget):
         super().__init__("Methods")
         self._client = client
         self._init_ui()
+        self._init_connection()
 
     def _init_ui(self):
         self._model = GRPCMethodsModel(self._client)
-        self._proxy_model = FilteredAttributeTypeProxyModel()
+
+        self._proxy_model = MultiColumnSortFilterProxyModel(self)
         self._proxy_model.setSourceModel(self._model)
+        self._proxy_model.sort_by_columns(
+            [0],
+            [Qt.SortOrder.DescendingOrder],
+        )
+        self._proxy_model.set_filter_function("search_filter", self._search_filter)
+
+        self._search = QLineEdit()
+        self._search.setPlaceholderText("Search methods...")
+
         self._view = MethodsTreeView()
         self._view.setModel(self._proxy_model)
         self._view.header().setSectionResizeMode(
@@ -171,9 +183,55 @@ class MethodsDock(QDockWidget):
 
         container = QWidget()
         layout = QVBoxLayout()
+        layout.addWidget(self._search)
         layout.addWidget(self._view)
         container.setLayout(layout)
         self.setWidget(container)
+
+    def _init_connection(self):
+        self._search.textChanged.connect(self._on_search_text_changed)
+
+    def _search_filter(
+        self,
+        source_row: int,
+        source_parent: QModelIndex,
+        source_model: GRPCMethodsModel,
+    ):
+        search_text = self._search.text().strip().lower()
+
+        index = source_model.index(source_row, 0, source_parent)
+        data = source_model.data(index, Qt.ItemDataRole.DisplayRole)
+
+        if isinstance(data, str) and data.endswith("type"):
+            return False
+
+        if not search_text:
+            return True
+
+        root_index = index
+        while root_index.parent().isValid():
+            root_index = root_index.parent()
+
+        if self._subtree_matches(root_index, source_model, search_text):
+            return True
+
+        return False
+
+    def _subtree_matches(
+        self, index: QModelIndex, model: GRPCMethodsModel, search_text: str
+    ) -> bool:
+        data = model.data(index, Qt.ItemDataRole.DisplayRole)
+        if data and search_text in str(data).lower():
+            return True
+
+        for i in range(model.rowCount(index)):
+            if self._subtree_matches(model.index(i, 0, index), model, search_text):
+                return True
+
+        return False
+
+    def _on_search_text_changed(self):
+        self._proxy_model.invalidateFilter()
 
     def set_object(self, object_id: str):
         self._proxy_model.setSourceModel(None)
