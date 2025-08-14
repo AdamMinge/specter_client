@@ -69,7 +69,7 @@ Core client and scripting engine. Provides the low-level API for connecting to a
 A PySide6-based GUI application for visual inspection, object hierarchy browsing, property editing, method invocation, and test authoring. Acts as the visual control center for live applications.
 
 - <a href="/specter_debugger/README.md"><strong>Specter Debugger</strong></a> - 
-A command-line-oriented module used to run scripted automation scenarios against Specter targets. Useful for continuous integration, regression testing, and non-interactive debugging.
+A command-line-oriented module used to run scripted automation scenarios against Specter targets. Useful for continuous integration, regression testing, and interactive debugging.
 
 Together, these modules enable:
 - Injection of the Specter DLL into live or launchable Qt processes

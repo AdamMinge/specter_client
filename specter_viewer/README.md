@@ -36,15 +36,82 @@
   <ol>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contact">Contact</a></li>
+    <li><a href="#about">About</a></li>
   </ol>
 </details>
+
+<!-- ABOUT -->
+## About
+
+<img src="../images/specter_viewer.png">
+
+### Properties (Top-Left)
+
+Displays the selected object’s properties.
+Properties shows current values such as visible, enabled, or geometry attributes. You can edit values directly.
+
+### Methods (Top-Left)
+
+Displays the selected object’s methods. 
+Methods Lists callable actions like setVisible, update, or repaint.
+You can invoke methods by clicking their corresponding buttons.
+
+### Objects (Top-Right)
+
+Hierarchical view of all discovered objects in the target application.
+- Name: Object name in the UI hierarchy (e.g., MainWindow, QAction).
+- Path: Full object path in the widget tree.
+- Type: Class type (e.g., QAction, QStackedWidget).
+- Id: Internal object ID.
+
+Clicking an object set current object, which is use to present properties, methods, view.
+
+### Viewer (Central)
+
+Live Preview of the currently selected object.
+- Displays the real-time rendered image of the widget or control.
+- Updates continuously as the object changes in the target application.
+- Useful for confirming visual state changes (e.g., hidden/visible, resized, text updated).
+
+### Editor (Bottom)
+
+Interactive Python scripting area connected to the Specter API.
+- Execute scripts against the target application in real-time.
+- Output and exceptions are shown directly under the script area.
+- Example: connect to client and change visibility of the main window:
+
+```py
+import specter
+import time
+
+from PySide6.QtNetwork import QHostAddress
+
+TIMEOUT=5
+HOST = QHostAddress("127.0.0.1")
+PORT = 5010
+
+client = specter.client.Client()
+client.connect_to_host(HOST, PORT)
+if not client.wait_for_connected(TIMEOUT):
+    raise Exception(f"Connection failed after waiting for {TIMEOUT} ms")
+    
+script_module = specter.scripts.module.ScriptModule(client)
+main_window = script_module.waitForObject('{"path": "^MainWindow$"}')
+
+print(f"main_window = {main_window.visible}")
+main_window.visible=False
+print(f"main_window = {main_window.visible}")
+main_window.visible=True
+print(f"main_window = {main_window.visible}")
+```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- ROADMAP -->
 ## Roadmap
 
-- [ ] Editor window for debugging script files
-- [ ] Recorder window for listen on actions/events
-
+- [ ] Improved code editor highlighting
+- [ ] Improved recording widget 
 
 See the [open issues](https://github.com/AdamMinge/specter_client/issues) for a full list of proposed features (and known issues).
 

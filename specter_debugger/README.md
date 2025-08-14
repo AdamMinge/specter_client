@@ -16,7 +16,7 @@
 <h3 align="center">Specter Debugger</h3>
 
   <p align="center">
-    Specter Debugger is a command-line-oriented module used to run scripted automation scenarios against Specter targets. Useful for continuous integration, regression testing, and non-interactive debugging.
+    Specter Debugger is a command-line-oriented module used to run scripted automation scenarios against Specter targets. Useful for continuous integration, regression testing, and interactive debugging.
     </br>
     </br>
     <a href="https://github.com/AdamMinge/specter_client"><strong>Explore the docs »</strong></a>
@@ -35,15 +35,107 @@
   <summary>Table of Contents</summary>
   <ol>
     <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#usage">Usage</a></li>
+      <ol>
+        <li><a href="#server-mode">Server Mode</a></li>
+        <li><a href="#client-mode">Client Mode</a></li>
+      </ol>
     <li><a href="#contact">Contact</a></li>
   </ol>
 </details>
 
+<!-- ABOUT -->
+## About
+
+The Specter Debugger provides a simple gRPC-based debugging server and client for running and inspecting Python code remotely.
+It comes with two main modes:
+
+- Server Mode — runs the debugger server that can be connected to.
+- Client Mode — connects to a running debugger server and provides an interactive CLI to manage sessions, sources, breakpoints, and listen to debug events.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- USAGE -->
+## Usage
+
+Run the CLI using:
+```sh
+specter_debugger [MODE] [OPTIONS]
+```
+
+Where [MODE] is either:
+- server — start the debugger server
+- client — connect to an existing debugger server
+
+<!-- SERVER MODE -->
+### Server Mode
+
+#### Command
+```sh
+specter_debugger server [OPTIONS]
+```
+
+| Option        | Default     | Description                                                  |
+| ------------- | ----------- | ------------------------------------------------------------ |
+| `--host`      | `localhost` | Host address to bind the server                              |
+| `--port`      | `50051`     | Port to bind the server                                      |
+| `--autostart` | *off*       | Automatically start the server without waiting for CLI input |
+
+#### Server Commands (interactive mode)
+
+Once in server mode (if --autostart is not provided), you can run:
+| Command | Description                           |
+| ------- | ------------------------------------- |
+| `start` | Start the gRPC debugger server        |
+| `stop`  | Stop the gRPC debugger server         |
+| `exit`  | Stop the server (if running) and exit |
+| `help`  | Show help                             |
+
+<!-- CLIENT MODE -->
+### Client Mode
+
+#### Command
+```sh
+specter_debugger client [OPTIONS]
+```
+
+| Option   | Default     | Description                      |
+| -------- | ----------- | -------------------------------- |
+| `--host` | `localhost` | Host of the server to connect to |
+| `--port` | `50051`     | Port of the server to connect to |
+
+#### Client Commands (interactive mode)
+
+Once in client mode, you have access to:
+| Command                         | Usage                          | Description                                  |
+| ------------------------------- | ------------------------------ | -------------------------------------------- |
+| `create_session`                |                                | Create a new debugging session               |
+| `get_sessions`                  |                                | List active sessions                         |
+| `set_source <filename>`         | `set_source main.py`           | Upload a source file to the current session  |
+| `start`                         |                                | Start debugging the current session          |
+| `stop`                          |                                | Stop debugging the current session           |
+| `add_breakpoint <file:line>`    | `add_breakpoint main.py:10`    | Add a breakpoint                             |
+| `remove_breakpoint <file:line>` | `remove_breakpoint main.py:10` | Remove a breakpoint                          |
+| `get_breakpoints`               |                                | List all breakpoints for the current session |
+| `listen`                        |                                | Start listening to debug events (async)      |
+| `stop_listen`                   |                                | Stop listening to events                     |
+| `exit`                          |                                | Exit the client                              |
+| `help`                          |                                | Show help                                    |
+
+#### Event Listening
+
+When listen is enabled, the client will display real-time debug events:
+- Line change → [EVENT] Line changed: file.py:42
+- Session finish → [EVENT] Debug session finished
+- Standard output → [STDOUT] message
+- Standard error → [STDERR] message
+
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 <!-- ROADMAP -->
 ## Roadmap
-
-- [ ] Host local server for debugging specter scripts
-
 
 See the [open issues](https://github.com/AdamMinge/specter_client/issues) for a full list of proposed features (and known issues).
 
