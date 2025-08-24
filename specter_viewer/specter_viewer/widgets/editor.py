@@ -1,6 +1,5 @@
 import subprocess
 import functools
-import json
 
 from PySide6.QtWidgets import (
     QDockWidget,
@@ -13,7 +12,7 @@ from PySide6.QtWidgets import (
     QToolButton,
     QApplication,
 )
-from PySide6.QtCore import Qt, QObject, QSize, Signal, QRect, QFile, QIODevice
+from PySide6.QtCore import Qt, QObject, QSize, Signal, QRect
 from PySide6.QtGui import (
     QSyntaxHighlighter,
     QTextCharFormat,
@@ -31,7 +30,10 @@ from PySide6.QtGui import (
     QKeyEvent,
 )
 
-from textmate import TextMateGrammarRepository, TextMateGrammar
+from pygments import lex
+from pygments.token import Token
+from pygments.lexers.python import PythonLexer
+from pygments.styles import get_style_by_name
 
 from specter.client import Client
 from specter_debugger import DebuggerClient
@@ -43,102 +45,59 @@ from specter_viewer.constants import (
 )
 
 
-def tx_format(color, style=""):
-    _format = QTextCharFormat()
+def pygments_style_to_qt(style_name="lightbulb"):
+    style = get_style_by_name(style_name)
 
-    if isinstance(color, str):
-        _color = QColor()
-        _color.setNamedColor(color)
-        _format.setForeground(_color)
-    else:
-        _format.setForeground(color)
+    qt_styles = {}
+    for token, style_def in style.styles.items():
+        if not style_def or style_def.strip() == "":
+            continue 
+        fmt = QTextCharFormat()
+        parts = style_def.split()
+        for p in parts:
+            if p.startswith("#"):
+                fmt.setForeground(QColor(p))
+            elif p == "bold":
+                fmt.setFontWeight(QFont.Weight.Bold)
+            elif p == "italic":
+                fmt.setFontItalic(True)
+        qt_styles[token] = fmt
 
-    if "bold" in style:
-        _format.setFontWeight(QFont.Bold)
-    if "italic" in style:
-        _format.setFontItalic(True)
+    def get_format(token):
+        t = token
+        while t not in qt_styles and t is not Token:
+            t = t.parent
+        return qt_styles.get(t, QTextCharFormat())
 
-    return _format
-
-
-STYLES_DARK = {
-    "keyword": tx_format(QColor(86, 156, 214), "bold"),
-    "defclass": tx_format(QColor(220, 220, 170), "bold"),
-    "string": tx_format(QColor(206, 145, 120)),
-    "comment": tx_format(QColor(106, 153, 85), "italic"),
-    "numbers": tx_format(QColor(181, 206, 168)),
-    "type": tx_format(QColor(78, 201, 176)),
-    "typeparam": tx_format(QColor(156, 220, 254)),
-    "fexpr": tx_format(QColor(220, 220, 170)),
-}
-
-STYLES_LIGHT = {
-    "keyword": tx_format("blue", "bold"),
-    "defclass": tx_format("darkMagenta", "bold"),
-    "string": tx_format("brown"),
-    "comment": tx_format("darkGreen", "italic"),
-    "numbers": tx_format("darkRed"),
-    "type": tx_format("teal"),
-    "typeparam": tx_format("navy"),
-    "fexpr": tx_format("black"),
-}
-
-
-def is_dark():
-    app = QApplication.instance()
-    if hasattr(app, "styleHints") and hasattr(app.styleHints(), "colorScheme"):
-        return app.styleHints().colorScheme().value == 2
-    return False
+    return get_format
 
 
 class PythonHighlighter(QSyntaxHighlighter):
     def __init__(self, document):
         super().__init__(document)
-        self.STYLES = STYLES_DARK if is_dark() else STYLES_LIGHT
+        self.lexer = self._create_lexer()
+        self.get_format = self._create_format_getter()
 
-        repository = self._load_repository()
-        python_grammar_data = repository.get_grammar_by_language("python")
-        self.grammar = TextMateGrammar(python_grammar_data, repository)
+    def _create_lexer(self):
+        return PythonLexer()
 
-        self.scope_map = {
-            "keyword": "keyword",
-            "entity.name.function": "defclass",
-            "entity.name.class": "defclass",
-            "string": "string",
-            "comment": "comment",
-            "constant.numeric": "numbers",
-            "support.type": "type",
-            "variable.parameter": "typeparam",
-            "meta.fstring": "fexpr",
-        }
-
-    def _load_repository(self):
-        grammar_files = [
-            ":/tm/MagicPython.tmLanguage.json",
-        ]
-        return TextMateGrammarRepository([self.load_json(f) for f in grammar_files])
-
-    @staticmethod
-    def load_json(filepath):
-        file = QFile(filepath)
-        if not file.open(QIODevice.ReadOnly | QIODevice.Text):
-            raise FileNotFoundError(
-                f"Resource {filepath} not found or cannot be opened"
-            )
-        data = file.readAll().data()
-        file.close()
-        return json.loads(data.decode("utf-8"))
+    def _create_format_getter(self):
+        def is_dark()->bool:
+            app = QApplication.instance()
+            if hasattr(app, "styleHints") and hasattr(app.styleHints(), "colorScheme"):
+                return app.styleHints().colorScheme().value == 2
+            return False
+            
+        return pygments_style_to_qt("lightbulb" if is_dark() else "default")
 
     def highlightBlock(self, text):
-        tokens = self.grammar.parse(text)
-
-        for scope, (start, end) in tokens:
-            for prefix, style_key in self.scope_map.items():
-                if scope.startswith(prefix):
-                    fmt = self.STYLES.get(style_key)
-                    if fmt:
-                        self.setFormat(start, end - start, fmt)
-                    break
+        pos = 0
+        for token, value in lex(text, self.lexer):
+            fmt = self.get_format(token)
+            if fmt:
+                self.setFormat(pos, len(value), fmt)
+            pos += len(value)
+    
 
 
 class LineNumberArea(QWidget):
