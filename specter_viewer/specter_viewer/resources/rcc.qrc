@@ -12,7 +12,5 @@
     <file>icons/zoom_in.png</file>
     <file>icons/zoom_out.png</file>
     <file>icons/zoom_to_fit.png</file>
-
-    <file>tm/MagicPython.tmLanguage.json</file>
 </qresource>
 </RCC>
