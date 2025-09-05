@@ -303,6 +303,463 @@ class RecorderService(object):
             _registered_method=True)
 
 
+class MouseServiceStub(object):
+    """------------------------------ MouseService ------------------------------- //
+
+    """
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.Click = channel.unary_unary(
+                '/specter_proto.MouseService/Click',
+                request_serializer=specter_dot_proto_dot_specter__pb2.MouseClick.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+        self.Move = channel.unary_unary(
+                '/specter_proto.MouseService/Move',
+                request_serializer=specter_dot_proto_dot_specter__pb2.MouseMove.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+        self.Scroll = channel.unary_unary(
+                '/specter_proto.MouseService/Scroll',
+                request_serializer=specter_dot_proto_dot_specter__pb2.MouseScroll.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+        self.ClickObject = channel.unary_unary(
+                '/specter_proto.MouseService/ClickObject',
+                request_serializer=specter_dot_proto_dot_specter__pb2.ObjectMouseClick.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+        self.MoveOverObject = channel.unary_unary(
+                '/specter_proto.MouseService/MoveOverObject',
+                request_serializer=specter_dot_proto_dot_specter__pb2.ObjectMouseMove.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+
+
+class MouseServiceServicer(object):
+    """------------------------------ MouseService ------------------------------- //
+
+    """
+
+    def Click(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Move(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Scroll(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ClickObject(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def MoveOverObject(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_MouseServiceServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'Click': grpc.unary_unary_rpc_method_handler(
+                    servicer.Click,
+                    request_deserializer=specter_dot_proto_dot_specter__pb2.MouseClick.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'Move': grpc.unary_unary_rpc_method_handler(
+                    servicer.Move,
+                    request_deserializer=specter_dot_proto_dot_specter__pb2.MouseMove.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'Scroll': grpc.unary_unary_rpc_method_handler(
+                    servicer.Scroll,
+                    request_deserializer=specter_dot_proto_dot_specter__pb2.MouseScroll.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'ClickObject': grpc.unary_unary_rpc_method_handler(
+                    servicer.ClickObject,
+                    request_deserializer=specter_dot_proto_dot_specter__pb2.ObjectMouseClick.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'MoveOverObject': grpc.unary_unary_rpc_method_handler(
+                    servicer.MoveOverObject,
+                    request_deserializer=specter_dot_proto_dot_specter__pb2.ObjectMouseMove.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'specter_proto.MouseService', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers('specter_proto.MouseService', rpc_method_handlers)
+
+
+ # This class is part of an EXPERIMENTAL API.
+class MouseService(object):
+    """------------------------------ MouseService ------------------------------- //
+
+    """
+
+    @staticmethod
+    def Click(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/specter_proto.MouseService/Click',
+            specter_dot_proto_dot_specter__pb2.MouseClick.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def Move(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/specter_proto.MouseService/Move',
+            specter_dot_proto_dot_specter__pb2.MouseMove.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def Scroll(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/specter_proto.MouseService/Scroll',
+            specter_dot_proto_dot_specter__pb2.MouseScroll.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ClickObject(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/specter_proto.MouseService/ClickObject',
+            specter_dot_proto_dot_specter__pb2.ObjectMouseClick.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def MoveOverObject(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/specter_proto.MouseService/MoveOverObject',
+            specter_dot_proto_dot_specter__pb2.ObjectMouseMove.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+
+class KeyboardServiceStub(object):
+    """---------------------------- KeyboardService ------------------------------ //
+
+    """
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.KeyPress = channel.unary_unary(
+                '/specter_proto.KeyboardService/KeyPress',
+                request_serializer=specter_dot_proto_dot_specter__pb2.KeyEvent.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+        self.KeyRelease = channel.unary_unary(
+                '/specter_proto.KeyboardService/KeyRelease',
+                request_serializer=specter_dot_proto_dot_specter__pb2.KeyEvent.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+        self.TypeText = channel.unary_unary(
+                '/specter_proto.KeyboardService/TypeText',
+                request_serializer=specter_dot_proto_dot_specter__pb2.TextInput.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+        self.TypeIntoObject = channel.unary_unary(
+                '/specter_proto.KeyboardService/TypeIntoObject',
+                request_serializer=specter_dot_proto_dot_specter__pb2.ObjectTextInput.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+
+
+class KeyboardServiceServicer(object):
+    """---------------------------- KeyboardService ------------------------------ //
+
+    """
+
+    def KeyPress(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def KeyRelease(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def TypeText(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def TypeIntoObject(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_KeyboardServiceServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'KeyPress': grpc.unary_unary_rpc_method_handler(
+                    servicer.KeyPress,
+                    request_deserializer=specter_dot_proto_dot_specter__pb2.KeyEvent.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'KeyRelease': grpc.unary_unary_rpc_method_handler(
+                    servicer.KeyRelease,
+                    request_deserializer=specter_dot_proto_dot_specter__pb2.KeyEvent.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'TypeText': grpc.unary_unary_rpc_method_handler(
+                    servicer.TypeText,
+                    request_deserializer=specter_dot_proto_dot_specter__pb2.TextInput.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'TypeIntoObject': grpc.unary_unary_rpc_method_handler(
+                    servicer.TypeIntoObject,
+                    request_deserializer=specter_dot_proto_dot_specter__pb2.ObjectTextInput.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'specter_proto.KeyboardService', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers('specter_proto.KeyboardService', rpc_method_handlers)
+
+
+ # This class is part of an EXPERIMENTAL API.
+class KeyboardService(object):
+    """---------------------------- KeyboardService ------------------------------ //
+
+    """
+
+    @staticmethod
+    def KeyPress(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/specter_proto.KeyboardService/KeyPress',
+            specter_dot_proto_dot_specter__pb2.KeyEvent.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def KeyRelease(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/specter_proto.KeyboardService/KeyRelease',
+            specter_dot_proto_dot_specter__pb2.KeyEvent.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def TypeText(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/specter_proto.KeyboardService/TypeText',
+            specter_dot_proto_dot_specter__pb2.TextInput.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def TypeIntoObject(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/specter_proto.KeyboardService/TypeIntoObject',
+            specter_dot_proto_dot_specter__pb2.ObjectTextInput.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+
 class ObjectServiceStub(object):
     """----------------------------- ObjectService ------------------------------- //
 
