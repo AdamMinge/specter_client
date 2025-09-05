@@ -27,22 +27,25 @@ service RecorderService {
 // ------------------------------ MouseService ------------------------------- //
 
 service MouseService {
-    rpc Click (MouseClick) returns (google.protobuf.Empty) {}
-    rpc Move (MouseMove) returns (google.protobuf.Empty) {}
-    rpc Scroll (MouseScroll) returns (google.protobuf.Empty) {}
+    rpc PressButton (MouseEvent) returns (google.protobuf.Empty) {}
+    rpc ReleaseButton (MouseEvent) returns (google.protobuf.Empty) {}
+    rpc ClickButton (MouseEvent) returns (google.protobuf.Empty) {}
+    rpc MoveCursor (CursorMove) returns (google.protobuf.Empty) {}
+    rpc ScrollWheel (WheelScroll) returns (google.protobuf.Empty) {}
 
-    rpc ClickObject (ObjectMouseClick) returns (google.protobuf.Empty) {}
-    rpc MoveOverObject (ObjectMouseMove) returns (google.protobuf.Empty) {}
+    rpc ClickOnObject (ObjectClick) returns (google.protobuf.Empty) {}
+    rpc HoverOverObject (ObjectHover) returns (google.protobuf.Empty) {}
 }
 
 // ---------------------------- KeyboardService ------------------------------ //
 
 service KeyboardService {
-    rpc KeyPress (KeyEvent) returns (google.protobuf.Empty) {}
-    rpc KeyRelease (KeyEvent) returns (google.protobuf.Empty) {}
-    rpc TypeText (TextInput) returns (google.protobuf.Empty) {}
+    rpc PressKey (KeyEvent) returns (google.protobuf.Empty) {}
+    rpc ReleaseKey (KeyEvent) returns (google.protobuf.Empty) {}
+    rpc TapKey (KeyEvent) returns (google.protobuf.Empty) {}
+    rpc EnterText (TextInput) returns (google.protobuf.Empty) {}
 
-    rpc TypeIntoObject (ObjectTextInput) returns (google.protobuf.Empty) {}
+    rpc EnterTextIntoObject (ObjectTextInput) returns (google.protobuf.Empty) {}
 }
 
 // ----------------------------- ObjectService ------------------------------- //
@@ -208,22 +211,22 @@ enum Anchor {
     RIGHT_BOTTOM = 4;
 }
 
-message MouseClick {
+message MouseEvent {
     Offset offset = 1;
     MouseButton button = 2;
     optional bool double_click = 3;
 }
 
-message MouseMove {
+message CursorMove {
     Offset offset = 1;
 }
 
-message MouseScroll {
+message WheelScroll {
     int32 delta_x = 1;
     int32 delta_y = 2;
 }
 
-message ObjectMouseClick {
+message ObjectClick {
     ObjectId object_id = 1;
     MouseButton button = 2;
     optional bool double_click = 3;
@@ -233,7 +236,7 @@ message ObjectMouseClick {
     }
 }
 
-message ObjectMouseMove {
+message ObjectHover {
     ObjectId object_id = 1;
     oneof position {
         Offset offset = 2;

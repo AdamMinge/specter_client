@@ -10,6 +10,8 @@ from specter.proto.specter_pb2_grpc import (
     MarkerServiceStub,
     ObjectServiceStub,
     PreviewerServiceStub,
+    MouseServiceStub,
+    KeyboardServiceStub
 )
 
 
@@ -37,6 +39,8 @@ class Client(QObject):
         self.marker_stub = MarkerServiceStub(self._channel)
         self.object_stub = ObjectServiceStub(self._channel)
         self.preview_stub = PreviewerServiceStub(self._channel)
+        self.mouse_stub = MouseServiceStub(self._channel)
+        self.keyboard_stub = KeyboardServiceStub(self._channel)
 
     def close(self):
         self._channel.close()

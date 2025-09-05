@@ -3,14 +3,14 @@ import typing
 
 from specter.proto.specter_pb2 import ObjectId, MethodCall, PropertyUpdate
 
-from specter.client import convert_from_value, convert_to_value
+from specter.client import Client, convert_from_value, convert_to_value
 
 
 class ObjectWrapper:
     _type_registry = {}
 
-    def __init__(self, object_stub, object_id: str, object_query: str):
-        self._stub = object_stub
+    def __init__(self, client: Client, object_id: str, object_query: str):
+        self._client: Client = client
         self._object_id: str = object_id
         self._object_query: str = object_query
         self._methods_cache: dict = None
@@ -26,13 +26,15 @@ class ObjectWrapper:
 
     def _get_methods(self):
         if self._methods_cache is None:
-            response = self._stub.GetMethods(ObjectId(id=self._object_id))
+            response = self.client.object_stub.GetMethods(ObjectId(id=self._object_id))
             self._methods_cache = {m.method_name: m for m in response.methods}
         return self._methods_cache
 
     def _get_properties(self):
         if self._properties_cache is None:
-            response = self._stub.GetProperties(ObjectId(id=self._object_id))
+            response = self.client.object_stub.GetProperties(
+                ObjectId(id=self._object_id)
+            )
             self._properties_cache = {p.property_name: p for p in response.properties}
         return self._properties_cache
 
@@ -49,7 +51,7 @@ class ObjectWrapper:
             method_name=method_name,
             arguments=pb_args,
         )
-        self._stub.CallMethod(method_call_pb)
+        self.client.object_stub.CallMethod(method_call_pb)
 
     def _get_remote_property(self, property_name: str):
         properties = self._get_properties()
@@ -87,18 +89,18 @@ class ObjectWrapper:
             value=pb_value,
         )
 
-        self._stub.UpdateProperty(property_update_pb)
+        self.client.object_stub.UpdateProperty(property_update_pb)
         self._properties_cache = None
 
     def getChildren(self):
-        response = self._stub.GetChildren(ObjectId(id=self._object_id))
+        response = self.client.object_stub.GetChildren(ObjectId(id=self._object_id))
         children = []
         for obj_pb in response.ids:
             children.append(ObjectWrapper.create_wrapper_object(self._stub, obj_pb.id))
         return children
 
     def getParent(self):
-        parent_pb = self._stub.GetParent(ObjectId(id=self._object_id))
+        parent_pb = self.client.object_stub.GetParent(ObjectId(id=self._object_id))
         if parent_pb and parent_pb.id:
             return ObjectWrapper.create_wrapper_object(self._stub, parent_pb.id)
         return None
@@ -148,12 +150,12 @@ class ObjectWrapper:
         return cls._type_registry.get(obj_type, QObjectWrapper)
 
     @classmethod
-    def create_wrapper_object(cls, object_stub, object_id: str):
-        query_pb = object_stub.GetObjectQuery(ObjectId(id=object_id))
+    def create_wrapper_object(cls, client, object_id: str):
+        query_pb = client.object_stub.GetObjectQuery(ObjectId(id=object_id))
         object_query = query_pb.query
 
         wrapper_class = cls.get_wrapper_class(object_query)
-        return wrapper_class(object_stub, object_id, object_query)
+        return wrapper_class(client, object_id, object_query)
 
 
 @ObjectWrapper.register_type("qobject")

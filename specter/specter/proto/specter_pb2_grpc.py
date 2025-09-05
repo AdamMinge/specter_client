@@ -314,29 +314,39 @@ class MouseServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.Click = channel.unary_unary(
-                '/specter_proto.MouseService/Click',
-                request_serializer=specter_dot_proto_dot_specter__pb2.MouseClick.SerializeToString,
+        self.PressButton = channel.unary_unary(
+                '/specter_proto.MouseService/PressButton',
+                request_serializer=specter_dot_proto_dot_specter__pb2.MouseEvent.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
-        self.Move = channel.unary_unary(
-                '/specter_proto.MouseService/Move',
-                request_serializer=specter_dot_proto_dot_specter__pb2.MouseMove.SerializeToString,
+        self.ReleaseButton = channel.unary_unary(
+                '/specter_proto.MouseService/ReleaseButton',
+                request_serializer=specter_dot_proto_dot_specter__pb2.MouseEvent.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
-        self.Scroll = channel.unary_unary(
-                '/specter_proto.MouseService/Scroll',
-                request_serializer=specter_dot_proto_dot_specter__pb2.MouseScroll.SerializeToString,
+        self.ClickButton = channel.unary_unary(
+                '/specter_proto.MouseService/ClickButton',
+                request_serializer=specter_dot_proto_dot_specter__pb2.MouseEvent.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
-        self.ClickObject = channel.unary_unary(
-                '/specter_proto.MouseService/ClickObject',
-                request_serializer=specter_dot_proto_dot_specter__pb2.ObjectMouseClick.SerializeToString,
+        self.MoveCursor = channel.unary_unary(
+                '/specter_proto.MouseService/MoveCursor',
+                request_serializer=specter_dot_proto_dot_specter__pb2.CursorMove.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
-        self.MoveOverObject = channel.unary_unary(
-                '/specter_proto.MouseService/MoveOverObject',
-                request_serializer=specter_dot_proto_dot_specter__pb2.ObjectMouseMove.SerializeToString,
+        self.ScrollWheel = channel.unary_unary(
+                '/specter_proto.MouseService/ScrollWheel',
+                request_serializer=specter_dot_proto_dot_specter__pb2.WheelScroll.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+        self.ClickOnObject = channel.unary_unary(
+                '/specter_proto.MouseService/ClickOnObject',
+                request_serializer=specter_dot_proto_dot_specter__pb2.ObjectClick.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+        self.HoverOverObject = channel.unary_unary(
+                '/specter_proto.MouseService/HoverOverObject',
+                request_serializer=specter_dot_proto_dot_specter__pb2.ObjectHover.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
 
@@ -346,31 +356,43 @@ class MouseServiceServicer(object):
 
     """
 
-    def Click(self, request, context):
+    def PressButton(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def Move(self, request, context):
+    def ReleaseButton(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def Scroll(self, request, context):
+    def ClickButton(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def ClickObject(self, request, context):
+    def MoveCursor(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def MoveOverObject(self, request, context):
+    def ScrollWheel(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ClickOnObject(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def HoverOverObject(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -379,29 +401,39 @@ class MouseServiceServicer(object):
 
 def add_MouseServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'Click': grpc.unary_unary_rpc_method_handler(
-                    servicer.Click,
-                    request_deserializer=specter_dot_proto_dot_specter__pb2.MouseClick.FromString,
+            'PressButton': grpc.unary_unary_rpc_method_handler(
+                    servicer.PressButton,
+                    request_deserializer=specter_dot_proto_dot_specter__pb2.MouseEvent.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
-            'Move': grpc.unary_unary_rpc_method_handler(
-                    servicer.Move,
-                    request_deserializer=specter_dot_proto_dot_specter__pb2.MouseMove.FromString,
+            'ReleaseButton': grpc.unary_unary_rpc_method_handler(
+                    servicer.ReleaseButton,
+                    request_deserializer=specter_dot_proto_dot_specter__pb2.MouseEvent.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
-            'Scroll': grpc.unary_unary_rpc_method_handler(
-                    servicer.Scroll,
-                    request_deserializer=specter_dot_proto_dot_specter__pb2.MouseScroll.FromString,
+            'ClickButton': grpc.unary_unary_rpc_method_handler(
+                    servicer.ClickButton,
+                    request_deserializer=specter_dot_proto_dot_specter__pb2.MouseEvent.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
-            'ClickObject': grpc.unary_unary_rpc_method_handler(
-                    servicer.ClickObject,
-                    request_deserializer=specter_dot_proto_dot_specter__pb2.ObjectMouseClick.FromString,
+            'MoveCursor': grpc.unary_unary_rpc_method_handler(
+                    servicer.MoveCursor,
+                    request_deserializer=specter_dot_proto_dot_specter__pb2.CursorMove.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
-            'MoveOverObject': grpc.unary_unary_rpc_method_handler(
-                    servicer.MoveOverObject,
-                    request_deserializer=specter_dot_proto_dot_specter__pb2.ObjectMouseMove.FromString,
+            'ScrollWheel': grpc.unary_unary_rpc_method_handler(
+                    servicer.ScrollWheel,
+                    request_deserializer=specter_dot_proto_dot_specter__pb2.WheelScroll.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'ClickOnObject': grpc.unary_unary_rpc_method_handler(
+                    servicer.ClickOnObject,
+                    request_deserializer=specter_dot_proto_dot_specter__pb2.ObjectClick.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'HoverOverObject': grpc.unary_unary_rpc_method_handler(
+                    servicer.HoverOverObject,
+                    request_deserializer=specter_dot_proto_dot_specter__pb2.ObjectHover.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
     }
@@ -418,7 +450,7 @@ class MouseService(object):
     """
 
     @staticmethod
-    def Click(request,
+    def PressButton(request,
             target,
             options=(),
             channel_credentials=None,
@@ -431,8 +463,8 @@ class MouseService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/specter_proto.MouseService/Click',
-            specter_dot_proto_dot_specter__pb2.MouseClick.SerializeToString,
+            '/specter_proto.MouseService/PressButton',
+            specter_dot_proto_dot_specter__pb2.MouseEvent.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
             channel_credentials,
@@ -445,7 +477,7 @@ class MouseService(object):
             _registered_method=True)
 
     @staticmethod
-    def Move(request,
+    def ReleaseButton(request,
             target,
             options=(),
             channel_credentials=None,
@@ -458,8 +490,8 @@ class MouseService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/specter_proto.MouseService/Move',
-            specter_dot_proto_dot_specter__pb2.MouseMove.SerializeToString,
+            '/specter_proto.MouseService/ReleaseButton',
+            specter_dot_proto_dot_specter__pb2.MouseEvent.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
             channel_credentials,
@@ -472,7 +504,7 @@ class MouseService(object):
             _registered_method=True)
 
     @staticmethod
-    def Scroll(request,
+    def ClickButton(request,
             target,
             options=(),
             channel_credentials=None,
@@ -485,8 +517,8 @@ class MouseService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/specter_proto.MouseService/Scroll',
-            specter_dot_proto_dot_specter__pb2.MouseScroll.SerializeToString,
+            '/specter_proto.MouseService/ClickButton',
+            specter_dot_proto_dot_specter__pb2.MouseEvent.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
             channel_credentials,
@@ -499,7 +531,7 @@ class MouseService(object):
             _registered_method=True)
 
     @staticmethod
-    def ClickObject(request,
+    def MoveCursor(request,
             target,
             options=(),
             channel_credentials=None,
@@ -512,8 +544,8 @@ class MouseService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/specter_proto.MouseService/ClickObject',
-            specter_dot_proto_dot_specter__pb2.ObjectMouseClick.SerializeToString,
+            '/specter_proto.MouseService/MoveCursor',
+            specter_dot_proto_dot_specter__pb2.CursorMove.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
             channel_credentials,
@@ -526,7 +558,7 @@ class MouseService(object):
             _registered_method=True)
 
     @staticmethod
-    def MoveOverObject(request,
+    def ScrollWheel(request,
             target,
             options=(),
             channel_credentials=None,
@@ -539,8 +571,62 @@ class MouseService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/specter_proto.MouseService/MoveOverObject',
-            specter_dot_proto_dot_specter__pb2.ObjectMouseMove.SerializeToString,
+            '/specter_proto.MouseService/ScrollWheel',
+            specter_dot_proto_dot_specter__pb2.WheelScroll.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ClickOnObject(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/specter_proto.MouseService/ClickOnObject',
+            specter_dot_proto_dot_specter__pb2.ObjectClick.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def HoverOverObject(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/specter_proto.MouseService/HoverOverObject',
+            specter_dot_proto_dot_specter__pb2.ObjectHover.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
             channel_credentials,
@@ -564,23 +650,28 @@ class KeyboardServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.KeyPress = channel.unary_unary(
-                '/specter_proto.KeyboardService/KeyPress',
+        self.PressKey = channel.unary_unary(
+                '/specter_proto.KeyboardService/PressKey',
                 request_serializer=specter_dot_proto_dot_specter__pb2.KeyEvent.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
-        self.KeyRelease = channel.unary_unary(
-                '/specter_proto.KeyboardService/KeyRelease',
+        self.ReleaseKey = channel.unary_unary(
+                '/specter_proto.KeyboardService/ReleaseKey',
                 request_serializer=specter_dot_proto_dot_specter__pb2.KeyEvent.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
-        self.TypeText = channel.unary_unary(
-                '/specter_proto.KeyboardService/TypeText',
+        self.TapKey = channel.unary_unary(
+                '/specter_proto.KeyboardService/TapKey',
+                request_serializer=specter_dot_proto_dot_specter__pb2.KeyEvent.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+        self.EnterText = channel.unary_unary(
+                '/specter_proto.KeyboardService/EnterText',
                 request_serializer=specter_dot_proto_dot_specter__pb2.TextInput.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
-        self.TypeIntoObject = channel.unary_unary(
-                '/specter_proto.KeyboardService/TypeIntoObject',
+        self.EnterTextIntoObject = channel.unary_unary(
+                '/specter_proto.KeyboardService/EnterTextIntoObject',
                 request_serializer=specter_dot_proto_dot_specter__pb2.ObjectTextInput.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
@@ -591,25 +682,31 @@ class KeyboardServiceServicer(object):
 
     """
 
-    def KeyPress(self, request, context):
+    def PressKey(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def KeyRelease(self, request, context):
+    def ReleaseKey(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def TypeText(self, request, context):
+    def TapKey(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def TypeIntoObject(self, request, context):
+    def EnterText(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def EnterTextIntoObject(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -618,23 +715,28 @@ class KeyboardServiceServicer(object):
 
 def add_KeyboardServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'KeyPress': grpc.unary_unary_rpc_method_handler(
-                    servicer.KeyPress,
+            'PressKey': grpc.unary_unary_rpc_method_handler(
+                    servicer.PressKey,
                     request_deserializer=specter_dot_proto_dot_specter__pb2.KeyEvent.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
-            'KeyRelease': grpc.unary_unary_rpc_method_handler(
-                    servicer.KeyRelease,
+            'ReleaseKey': grpc.unary_unary_rpc_method_handler(
+                    servicer.ReleaseKey,
                     request_deserializer=specter_dot_proto_dot_specter__pb2.KeyEvent.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
-            'TypeText': grpc.unary_unary_rpc_method_handler(
-                    servicer.TypeText,
+            'TapKey': grpc.unary_unary_rpc_method_handler(
+                    servicer.TapKey,
+                    request_deserializer=specter_dot_proto_dot_specter__pb2.KeyEvent.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'EnterText': grpc.unary_unary_rpc_method_handler(
+                    servicer.EnterText,
                     request_deserializer=specter_dot_proto_dot_specter__pb2.TextInput.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
-            'TypeIntoObject': grpc.unary_unary_rpc_method_handler(
-                    servicer.TypeIntoObject,
+            'EnterTextIntoObject': grpc.unary_unary_rpc_method_handler(
+                    servicer.EnterTextIntoObject,
                     request_deserializer=specter_dot_proto_dot_specter__pb2.ObjectTextInput.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
@@ -652,7 +754,7 @@ class KeyboardService(object):
     """
 
     @staticmethod
-    def KeyPress(request,
+    def PressKey(request,
             target,
             options=(),
             channel_credentials=None,
@@ -665,7 +767,7 @@ class KeyboardService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/specter_proto.KeyboardService/KeyPress',
+            '/specter_proto.KeyboardService/PressKey',
             specter_dot_proto_dot_specter__pb2.KeyEvent.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
@@ -679,7 +781,7 @@ class KeyboardService(object):
             _registered_method=True)
 
     @staticmethod
-    def KeyRelease(request,
+    def ReleaseKey(request,
             target,
             options=(),
             channel_credentials=None,
@@ -692,7 +794,7 @@ class KeyboardService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/specter_proto.KeyboardService/KeyRelease',
+            '/specter_proto.KeyboardService/ReleaseKey',
             specter_dot_proto_dot_specter__pb2.KeyEvent.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
@@ -706,7 +808,7 @@ class KeyboardService(object):
             _registered_method=True)
 
     @staticmethod
-    def TypeText(request,
+    def TapKey(request,
             target,
             options=(),
             channel_credentials=None,
@@ -719,7 +821,34 @@ class KeyboardService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/specter_proto.KeyboardService/TypeText',
+            '/specter_proto.KeyboardService/TapKey',
+            specter_dot_proto_dot_specter__pb2.KeyEvent.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def EnterText(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/specter_proto.KeyboardService/EnterText',
             specter_dot_proto_dot_specter__pb2.TextInput.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
@@ -733,7 +862,7 @@ class KeyboardService(object):
             _registered_method=True)
 
     @staticmethod
-    def TypeIntoObject(request,
+    def EnterTextIntoObject(request,
             target,
             options=(),
             channel_credentials=None,
@@ -746,7 +875,7 @@ class KeyboardService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/specter_proto.KeyboardService/TypeIntoObject',
+            '/specter_proto.KeyboardService/EnterTextIntoObject',
             specter_dot_proto_dot_specter__pb2.ObjectTextInput.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
