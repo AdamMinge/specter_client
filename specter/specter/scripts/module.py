@@ -2,6 +2,7 @@ import time
 
 from PySide6.QtCore import Qt, QPoint
 
+from specter.proto.utils import create_key_event, create_mouse_button
 from specter.proto.specter_pb2 import (
     ObjectSearchQuery,
     MouseEvent,
@@ -9,8 +10,6 @@ from specter.proto.specter_pb2 import (
     CursorMove,
     WheelScroll,
     TextInput,
-    MouseButton,
-    KeyEvent,
 )
 
 from specter.client import Client
@@ -21,25 +20,6 @@ class ScriptModule:
     def __init__(self, client: Client):
         super().__init__()
         self._client: Client = client
-
-    def _qt_button_to_proto(self, button: Qt.MouseButton) -> MouseButton:
-        if button == Qt.MouseButton.LeftButton:
-            return MouseButton.LEFT
-        elif button == Qt.MouseButton.RightButton:
-            return MouseButton.RIGHT
-        elif button == Qt.MouseButton.MiddleButton:
-            return MouseButton.MIDDLE
-        else:
-            raise ValueError(f"Unsupported Qt.MouseButton: {button}")
-
-    def _build_key_event(self, key: Qt.Key, mods: Qt.KeyboardModifier) -> KeyEvent:
-        return KeyEvent(
-            key_code=int(key),
-            ctrl=bool(mods & Qt.KeyboardModifier.ControlModifier),
-            alt=bool(mods & Qt.KeyboardModifier.AltModifier),
-            shift=bool(mods & Qt.KeyboardModifier.ShiftModifier),
-            meta=bool(mods & Qt.KeyboardModifier.MetaModifier),
-        )
 
     def waitForObject(self, object_query, timeout=10):
         object_pb_request = ObjectSearchQuery(query=object_query)
@@ -62,7 +42,7 @@ class ScriptModule:
     def pressMouseButton(self, pos: QPoint, button: Qt.MouseButton, double_click: bool):
         event = MouseEvent(
             offset=Offset(x=pos.x(), y=pos.y()),
-            button=self._qt_button_to_proto(button),
+            button=create_mouse_button(button),
             double_click=double_click,
         )
         self._client.mouse_stub.PressButton(event)
@@ -70,14 +50,14 @@ class ScriptModule:
     def releaseMouseButton(self, pos: QPoint, button: Qt.MouseButton):
         event = MouseEvent(
             offset=Offset(x=pos.x(), y=pos.y()),
-            button=self._qt_button_to_proto(button),
+            button=create_mouse_button(button),
         )
         self._client.mouse_stub.ReleaseButton(event)
 
     def clickMouseButton(self, pos: QPoint, button: Qt.MouseButton, double_click: bool):
         event = MouseEvent(
             offset=Offset(x=pos.x(), y=pos.y()),
-            button=self._qt_button_to_proto(button),
+            button=create_mouse_button(button),
             double_click=double_click,
         )
         self._client.mouse_stub.ClickButton(event)
@@ -93,19 +73,19 @@ class ScriptModule:
     def pressKey(
         self, key: Qt.Key, mods: Qt.KeyboardModifier = Qt.KeyboardModifier.NoModifier
     ):
-        event = self._build_key_event(key, mods)
+        event = create_key_event(key, mods)
         self._client.keyboard_stub.PressKey(event)
 
     def releaseKey(
         self, key: Qt.Key, mods: Qt.KeyboardModifier = Qt.KeyboardModifier.NoModifier
     ):
-        event = self._build_key_event(key, mods)
+        event = create_key_event(key, mods)
         self._client.keyboard_stub.ReleaseKey(event)
 
     def tapKey(
         self, key: Qt.Key, mods: Qt.KeyboardModifier = Qt.KeyboardModifier.NoModifier
     ):
-        event = self._build_key_event(key, mods)
+        event = create_key_event(key, mods)
         self._client.keyboard_stub.TapKey(event)
 
     def enterText(self, text: str):
