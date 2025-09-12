@@ -10,6 +10,10 @@ from specter.proto.specter_pb2 import (
     CursorMove,
     WheelScroll,
     TextInput,
+    ObjectClick,
+    ObjectId,
+    ObjectHover,
+    ObjectTextInput,
 )
 
 from specter.client import Client
@@ -90,3 +94,36 @@ class ScriptModule:
 
     def enterText(self, text: str):
         self._client.keyboard_stub.EnterText(TextInput(text=text))
+
+    def clickObject(
+        self,
+        object: ObjectWrapper,
+        pos: QPoint,
+        button: Qt.MouseButton,
+        double_click: bool,
+    ):
+        event = ObjectClick(
+            object_id=ObjectId(id=object._object_id),
+            button=create_mouse_button(button),
+            double_click=double_click,
+            offset=Offset(x=pos.x(), y=pos.y()),
+        )
+        self._client.mouse_stub.ClickOnObject(event)
+
+    def hoverObject(
+        self,
+        object: ObjectWrapper,
+        pos: QPoint,
+    ):
+        event = ObjectHover(
+            object_id=ObjectId(id=object.id),
+            offset=Offset(x=pos.x(), y=pos.y()),
+        )
+        self._client.mouse_stub.HoverOverObject(event)
+
+    def enterTextIntoObject(self, object: ObjectWrapper, text: str):
+        event = ObjectTextInput(
+            object_id=ObjectId(id=object.id),
+            text=text,
+        )
+        self._client.keyboard_stub.EnterTextIntoObject(event)
