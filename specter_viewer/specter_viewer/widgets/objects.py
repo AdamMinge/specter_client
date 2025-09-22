@@ -6,9 +6,19 @@ from PySide6.QtWidgets import (
     QTreeView,
     QLineEdit,
 )
-from PySide6.QtCore import Signal, Qt, QModelIndex
+from PySide6.QtCore import (
+    Qt,
+    QModelIndex,
+    QMetaObject,
+    QItemSelectionModel,
+    Signal,
+    Slot,
+    Q_ARG,
+)
 
-from specter.client import Client
+from google.protobuf import empty_pb2
+
+from specter.client import Client, StreamReader
 
 from specter_viewer.models.objects import GRPCObjectsModel
 from specter_viewer.models.proxies import MultiColumnSortFilterProxyModel
@@ -22,6 +32,7 @@ class ObjectsDock(QDockWidget):
         self._client = client
         self._init_ui()
         self._init_connection()
+        self._init_selection_stream()
 
     def _init_ui(self):
         self._model = GRPCObjectsModel(self._client)
@@ -51,6 +62,38 @@ class ObjectsDock(QDockWidget):
     def _init_connection(self):
         self._view.selectionModel().selectionChanged.connect(self._on_selection_changed)
         self._search.textChanged.connect(self._on_search_text_changed)
+
+    def _init_selection_stream(self):
+        self._selection_stream = StreamReader(
+            stream=self._client.marker_stub.ListenSelectionChanges(empty_pb2.Empty()),
+            on_data=self._handle_selection_change,
+        )
+
+    def _handle_selection_change(self, object_id_msg):
+        QMetaObject.invokeMethod(
+            self,
+            "_select_object",
+            Qt.QueuedConnection,
+            Q_ARG(str, object_id_msg.id),
+        )
+
+    @Slot(str)
+    def _select_object(self, object_id: str):
+        source_index = self._model.findItem(object_id)
+        if not source_index.isValid():
+            return
+
+        proxy_index = self._proxy_model.mapFromSource(source_index)
+        if not proxy_index.isValid():
+            return
+
+        sel_model = self._view.selectionModel()
+        sel_model.clearSelection()
+        sel_model.select(
+            proxy_index,
+            QItemSelectionModel.Select | QItemSelectionModel.Rows,
+        )
+        self._view.scrollTo(proxy_index)
 
     def _search_filter(
         self,

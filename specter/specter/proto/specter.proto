@@ -16,6 +16,8 @@ service PreviewerService {
 service MarkerService {
     rpc Start (google.protobuf.Empty) returns (google.protobuf.Empty) {}
     rpc Stop (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+    rpc ListenSelectionChanges (google.protobuf.Empty) returns (stream ObjectId) {}
 }
 
 // ----------------------------- RecorderService ----------------------------- //

@@ -125,6 +125,11 @@ class MarkerServiceStub(object):
                 request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
+        self.ListenSelectionChanges = channel.unary_stream(
+                '/specter_proto.MarkerService/ListenSelectionChanges',
+                request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+                response_deserializer=specter_dot_proto_dot_specter__pb2.ObjectId.FromString,
+                _registered_method=True)
 
 
 class MarkerServiceServicer(object):
@@ -144,6 +149,12 @@ class MarkerServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ListenSelectionChanges(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_MarkerServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -156,6 +167,11 @@ def add_MarkerServiceServicer_to_server(servicer, server):
                     servicer.Stop,
                     request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'ListenSelectionChanges': grpc.unary_stream_rpc_method_handler(
+                    servicer.ListenSelectionChanges,
+                    request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                    response_serializer=specter_dot_proto_dot_specter__pb2.ObjectId.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -214,6 +230,33 @@ class MarkerService(object):
             '/specter_proto.MarkerService/Stop',
             google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListenSelectionChanges(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(
+            request,
+            target,
+            '/specter_proto.MarkerService/ListenSelectionChanges',
+            google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            specter_dot_proto_dot_specter__pb2.ObjectId.FromString,
             options,
             channel_credentials,
             insecure,
