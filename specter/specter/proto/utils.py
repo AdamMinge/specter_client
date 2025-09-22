@@ -1,9 +1,8 @@
-from PySide6.QtCore import Qt
+import typing
 
-from specter.proto.specter_pb2 import (
-    MouseButton,
-    KeyEvent,
-)
+from PySide6.QtCore import Qt, QPoint
+
+from specter.proto.specter_pb2 import MouseButton, KeyEvent, Anchor, Offset
 
 
 def create_mouse_button(button: Qt.MouseButton) -> MouseButton:
@@ -25,3 +24,16 @@ def create_key_event(key: Qt.Key, mods: Qt.KeyboardModifier) -> KeyEvent:
         shift=bool(mods & Qt.KeyboardModifier.ShiftModifier),
         meta=bool(mods & Qt.KeyboardModifier.MetaModifier),
     )
+
+
+def create_position(
+    pos_or_anchor: typing.Optional[typing.Union[QPoint, int]],
+) -> typing.Dict[str, typing.Any]:
+    if isinstance(pos_or_anchor, QPoint):
+        return {"offset": Offset(x=pos_or_anchor.x(), y=pos_or_anchor.y())}
+    elif isinstance(pos_or_anchor, int):
+        if pos_or_anchor in Anchor.values():
+            return {"anchor": pos_or_anchor}
+        else:
+            raise ValueError(f"Invalid Anchor value: {pos_or_anchor}")
+    return {}

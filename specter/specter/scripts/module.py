@@ -1,8 +1,9 @@
 import time
+import typing
 
 from PySide6.QtCore import Qt, QPoint
 
-from specter.proto.utils import create_key_event, create_mouse_button
+from specter.proto.utils import create_key_event, create_mouse_button, create_position
 from specter.proto.specter_pb2 import (
     ObjectSearchQuery,
     MouseEvent,
@@ -14,6 +15,7 @@ from specter.proto.specter_pb2 import (
     ObjectId,
     ObjectHover,
     ObjectTextInput,
+    Anchor,
 )
 
 from specter.client import Client
@@ -98,7 +100,7 @@ class ScriptModule:
     def clickObject(
         self,
         object: ObjectWrapper,
-        pos: QPoint,
+        pos_or_anchor: typing.Union[QPoint, Anchor, None],
         button: Qt.MouseButton,
         double_click: bool,
     ):
@@ -106,18 +108,17 @@ class ScriptModule:
             object_id=ObjectId(id=object._object_id),
             button=create_mouse_button(button),
             double_click=double_click,
-            offset=Offset(x=pos.x(), y=pos.y()),
+            **create_position(pos_or_anchor),
         )
         self._client.mouse_stub.ClickOnObject(event)
 
     def hoverObject(
         self,
         object: ObjectWrapper,
-        pos: QPoint,
+        pos_or_anchor: typing.Union[QPoint, Anchor, None],
     ):
         event = ObjectHover(
-            object_id=ObjectId(id=object.id),
-            offset=Offset(x=pos.x(), y=pos.y()),
+            object_id=ObjectId(id=object.id), **create_position(pos_or_anchor)
         )
         self._client.mouse_stub.HoverOverObject(event)
 
