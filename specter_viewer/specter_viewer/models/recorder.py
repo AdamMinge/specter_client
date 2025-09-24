@@ -22,6 +22,25 @@ class BaseConsoleItem(QObject):
         raise NotImplementedError()
 
 
+EVENT_FORMATTERS = {
+    "context_menu_opened": lambda ev: f"ContextMenuOpened {ev.object.id}",
+    "button_clicked": lambda ev: f"ButtonClicked {ev.object.id}",
+    "button_toggled": lambda ev: f"ButtonToggled {ev.object.id} checked={ev.checked}",
+    "combo_box_current_changed": lambda ev: f"ComboBoxCurrentChanged {ev.object.id} index={ev.index}",
+    "spin_box_value_changed": lambda ev: f"SpinBoxValueChanged {ev.object.id} value={ev.value}",
+    "double_spin_box_value_changed": lambda ev: f"DoubleSpinBoxValueChanged {ev.object.id} value={ev.value}",
+    "slider_value_changed": lambda ev: f"SliderValueChanged {ev.object.id} value={ev.value}",
+    "tab_current_changed": lambda ev: f"TabCurrentChanged {ev.object.id} index={ev.index}",
+    "tab_closed": lambda ev: f"TabClosed {ev.object.id} index={ev.index}",
+    "tab_moved": lambda ev: f"TabMoved {ev.object.id} from={ev.from_} to={ev.to}",
+    "tool_box_current_changed": lambda ev: f"ToolBoxCurrentChanged {ev.object.id} index={ev.index}",
+    "action_triggered": lambda ev: f"ActionTriggered {ev.object.id}",
+    "text_edit_text_changed": lambda ev: f"TextEditTextChanged {ev.object.id} value={ev.value}",
+    "line_edit_text_changed": lambda ev: f"LineEditTextChanged {ev.object.id} value={ev.value}",
+    "line_edit_return_pressed": lambda ev: f"LineEditReturnPressed {ev.object.id}",
+}
+
+
 class GRPCRecorderConsoleItem(BaseConsoleItem):
     def __init__(self, id: str, client: Client, parent=None):
         super().__init__(parent)
@@ -55,9 +74,16 @@ class GRPCRecorderConsoleItem(BaseConsoleItem):
         return self._stream_reader is not None
 
     def handle_recorded_action(self, action):
-        commands = [action.command]
-        self._lines.extend(commands)
-        self.loadedLinesChanged.emit(commands, len(self._lines))
+        which = action.WhichOneof("event")
+        if not which:
+            return
+
+        ev = getattr(action, which)
+        formatter = EVENT_FORMATTERS.get(which, lambda ev: f"Unknown event: {which}")
+        text = formatter(ev)
+
+        self._lines.append(text)
+        self.loadedLinesChanged.emit([text], len(self._lines))
 
 
 class ConsoleModel(QAbstractItemModel):
