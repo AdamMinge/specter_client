@@ -260,75 +260,75 @@ message ObjectTextInput {
 }
 
 message ContextMenuOpened {
-  ObjectId object = 1;
+  ObjectSearchQuery object_query = 1;
 }
 
 message ButtonClicked {
-  ObjectId object = 1;
+  ObjectSearchQuery object_query = 1;
 }
 
 message ButtonToggled {
-  ObjectId object = 1;
+  ObjectSearchQuery object_query = 1;
   bool checked = 2;
 }
 
 message ComboBoxCurrentChanged {
-  ObjectId object = 1;
+  ObjectSearchQuery object_query = 1;
   int32 index = 2;
 }
 
 message SpinBoxValueChanged {
-  ObjectId object = 1;
+  ObjectSearchQuery object_query = 1;
   int32 value = 2;
 }
 
 message DoubleSpinBoxValueChanged {
-  ObjectId object = 1;
+  ObjectSearchQuery object_query = 1;
   double value = 2;
 }
 
 message SliderValueChanged {
-  ObjectId object = 1;
+  ObjectSearchQuery object_query = 1;
   int32 value = 2;
 }
 
 message TabCurrentChanged {
-  ObjectId object = 1;
+  ObjectSearchQuery object_query = 1;
   int32 index = 2;
 }
 
 message TabClosed {
-  ObjectId object = 1;
+  ObjectSearchQuery object_query = 1;
   int32 index = 2;
 }
 
 message TabMoved {
-  ObjectId object = 1;
+  ObjectSearchQuery object_query = 1;
   int32 from = 2;
   int32 to = 3;
 }
 
 message ToolBoxCurrentChanged {
-  ObjectId object = 1;
+  ObjectSearchQuery object_query = 1;
   int32 index = 2;
 }
 
 message ActionTriggered {
-  ObjectId object = 1;
+  ObjectSearchQuery object_query = 1;
 }
 
 message TextEditTextChanged {
-  ObjectId object = 1;
+  ObjectSearchQuery object_query = 1;
   string value = 2;
 }
 
 message LineEditTextChanged {
-  ObjectId object = 1;
+  ObjectSearchQuery object_query = 1;
   string value = 2;
 }
 
 message LineEditReturnPressed {
-  ObjectId object = 1;
+  ObjectSearchQuery object_query = 1;
 }
 
 message RecorderCommand {

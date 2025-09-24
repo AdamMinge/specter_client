@@ -23,21 +23,21 @@ class BaseConsoleItem(QObject):
 
 
 EVENT_FORMATTERS = {
-    "context_menu_opened": lambda ev: f"ContextMenuOpened {ev.object.id}",
-    "button_clicked": lambda ev: f"ButtonClicked {ev.object.id}",
-    "button_toggled": lambda ev: f"ButtonToggled {ev.object.id} checked={ev.checked}",
-    "combo_box_current_changed": lambda ev: f"ComboBoxCurrentChanged {ev.object.id} index={ev.index}",
-    "spin_box_value_changed": lambda ev: f"SpinBoxValueChanged {ev.object.id} value={ev.value}",
-    "double_spin_box_value_changed": lambda ev: f"DoubleSpinBoxValueChanged {ev.object.id} value={ev.value}",
-    "slider_value_changed": lambda ev: f"SliderValueChanged {ev.object.id} value={ev.value}",
-    "tab_current_changed": lambda ev: f"TabCurrentChanged {ev.object.id} index={ev.index}",
-    "tab_closed": lambda ev: f"TabClosed {ev.object.id} index={ev.index}",
-    "tab_moved": lambda ev: f"TabMoved {ev.object.id} from={ev.from_} to={ev.to}",
-    "tool_box_current_changed": lambda ev: f"ToolBoxCurrentChanged {ev.object.id} index={ev.index}",
-    "action_triggered": lambda ev: f"ActionTriggered {ev.object.id}",
-    "text_edit_text_changed": lambda ev: f"TextEditTextChanged {ev.object.id} value={ev.value}",
-    "line_edit_text_changed": lambda ev: f"LineEditTextChanged {ev.object.id} value={ev.value}",
-    "line_edit_return_pressed": lambda ev: f"LineEditReturnPressed {ev.object.id}",
+    "context_menu_opened": lambda ev: f"ContextMenuOpened {ev.object_query.query}",
+    "button_clicked": lambda ev: f"ButtonClicked {ev.object_query.query}",
+    "button_toggled": lambda ev: f"ButtonToggled {ev.object_query.query} checked={ev.checked}",
+    "combo_box_current_changed": lambda ev: f"ComboBoxCurrentChanged {ev.object_query.query} index={ev.index}",
+    "spin_box_value_changed": lambda ev: f"SpinBoxValueChanged {ev.object_query.query} value={ev.value}",
+    "double_spin_box_value_changed": lambda ev: f"DoubleSpinBoxValueChanged {ev.object_query.query} value={ev.value}",
+    "slider_value_changed": lambda ev: f"SliderValueChanged {ev.object_query.query} value={ev.value}",
+    "tab_current_changed": lambda ev: f"TabCurrentChanged {ev.object_query.query} index={ev.index}",
+    "tab_closed": lambda ev: f"TabClosed {ev.object_query.query} index={ev.index}",
+    "tab_moved": lambda ev: f"TabMoved {ev.object_query.query} from={ev.from_} to={ev.to}",
+    "tool_box_current_changed": lambda ev: f"ToolBoxCurrentChanged {ev.object_query.query} index={ev.index}",
+    "action_triggered": lambda ev: f"ActionTriggered {ev.object_query.query}",
+    "text_edit_text_changed": lambda ev: f"TextEditTextChanged {ev.object_query.query} value={ev.value}",
+    "line_edit_text_changed": lambda ev: f"LineEditTextChanged {ev.object_query.query} value={ev.value}",
+    "line_edit_return_pressed": lambda ev: f"LineEditReturnPressed {ev.object_query.query}",
 }
 
 
