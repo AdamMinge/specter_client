@@ -46,14 +46,14 @@ class GRPCRecorderConsoleItem(BaseConsoleItem):
         super().__init__(parent)
         self._id = id
         self._lines: list[str] = []
-        self._events: list[typing.Tuple[str, typing.Any]] = []
+        self._events: list[typing.Any] = []
         self._client = client
         self._stream_reader = None
 
     def get_current_line_list(self) -> typing.Tuple[list[str], int]:
         return self._lines, 0
 
-    def get_events(self) -> list[typing.Tuple[str, typing.Any]]:
+    def get_events(self) -> list[typing.Any]:
         return self._events
 
     def data(self, role: Qt.ItemDataRole, column: int = 0) -> typing.Any:
@@ -86,7 +86,7 @@ class GRPCRecorderConsoleItem(BaseConsoleItem):
         formatter = EVENT_FORMATTERS.get(which, lambda ev: f"Unknown event: {which}")
         text = formatter(ev)
 
-        self._events.append((which, ev))
+        self._events.append(action)
         self._lines.append(text)
 
         self.loadedLinesChanged.emit([text], len(self._lines))
@@ -161,7 +161,7 @@ class ConsoleModel(QAbstractItemModel):
             return item
         elif role == ConsoleModel.ConsoleItemRole:
             if isinstance(item, GRPCRecorderConsoleItem):
-                return item.get_all_events()
+                return item.get_events()
             return []
         else:
             return None

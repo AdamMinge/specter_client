@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QSplitter,
     QPlainTextEdit,
     QTableView,
+    QFileDialog,
 )
 from PySide6.QtGui import QIcon, QPixmap, QTextCursor
 from PySide6.QtCore import (
@@ -28,6 +29,7 @@ from PySide6.QtCore import (
 )
 
 from specter.client import Client
+from specter.scripts.generator import CodeGenerator
 
 from specter_viewer.delegates.recorder import RecorderWidgetDelegate
 from specter_viewer.models.proxies import MultiColumnSortFilterProxyModel
@@ -352,6 +354,7 @@ class RecorderDock(QDockWidget):
         self._resume_button = self._make_tool_button("Resume", ":/icons/resume.png")
         self._pause_button = self._make_tool_button("Pause", ":/icons/pause.png")
         self._stop_button = self._make_tool_button("Stop", ":/icons/stop.png")
+        self._export_button = self._make_tool_button("Export", ":/icons/export.png")
 
         toolbar_layout = QHBoxLayout()
         toolbar_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
@@ -359,6 +362,7 @@ class RecorderDock(QDockWidget):
         toolbar_layout.addWidget(self._resume_button)
         toolbar_layout.addWidget(self._pause_button)
         toolbar_layout.addWidget(self._stop_button)
+        toolbar_layout.addWidget(self._export_button)
 
         toolbar_widget = QWidget()
         toolbar_widget.setLayout(toolbar_layout)
@@ -384,6 +388,7 @@ class RecorderDock(QDockWidget):
         self._resume_button.clicked.connect(self._on_resume_recording)
         self._pause_button.clicked.connect(self._on_pause_recording)
         self._stop_button.clicked.connect(self._on_stop_recording)
+        self._export_button.clicked.connect(self._on_export_recording)
 
         self._view._ui.fileSelectionTableView.selectionModel().selectionChanged.connect(
             self._update_buttons
@@ -408,6 +413,23 @@ class RecorderDock(QDockWidget):
         index = self._view._ui.fileSelectionTableView.selectionModel().currentIndex()
         self._view.delete_file_selector_at_index(index)
 
+    def _on_export_recording(self):
+        console_item = self._get_current_console_item()
+        assert console_item
+
+        code_generator = CodeGenerator()
+        script_text = code_generator.generate(console_item.get_events())
+
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save Python Script",
+            "recording.py",
+            "Python Files (*.py)",
+        )
+        if file_path:
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(script_text)
+
     def _update_buttons(self):
         console_item = self._get_current_console_item()
 
@@ -419,6 +441,7 @@ class RecorderDock(QDockWidget):
             console_item.is_running() if console_item else False
         )
         self._stop_button.setEnabled(console_item is not None)
+        self._export_button.setEnabled(console_item is not None)
 
     def _get_current_console_item(self) -> GRPCRecorderConsoleItem:
         index = self._view._ui.fileSelectionTableView.selectionModel().currentIndex()
