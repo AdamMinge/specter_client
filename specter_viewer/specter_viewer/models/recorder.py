@@ -79,8 +79,7 @@ class GRPCRecorderConsoleItem(BaseConsoleItem):
 
     def handle_recorded_action(self, action):
         which = action.WhichOneof("event")
-        if not which:
-            return
+        assert which
 
         ev = getattr(action, which)
         formatter = EVENT_FORMATTERS.get(which, lambda ev: f"Unknown event: {which}")

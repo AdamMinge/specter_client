@@ -2,5 +2,200 @@ import typing
 
 
 class CodeGenerator:
+    def __init__(self):
+        self._event_mapping = {
+            "context_menu_opened": self._context_menu_opened,
+            "button_clicked": self._button_clicked,
+            "button_toggled": self._button_toggled,
+            "combo_box_current_changed": self._combo_box_current_changed,
+            "spin_box_value_changed": self._spin_box_value_changed,
+            "double_spin_box_value_changed": self._double_spin_box_value_changed,
+            "slider_value_changed": self._slider_value_changed,
+            "tab_current_changed": self._tab_current_changed,
+            "tab_closed": self._tab_closed,
+            "tab_moved": self._tab_moved,
+            "tool_box_current_changed": self._tool_box_current_changed,
+            "action_triggered": self._action_triggered,
+            "text_edit_text_changed": self._text_edit_text_changed,
+            "line_edit_text_changed": self._line_edit_text_changed,
+            "line_edit_return_pressed": self._line_edit_return_pressed,
+        }
+
+    @staticmethod
+    def _get_query_key(inner_event: typing.Any) -> str:
+        try:
+            qq = getattr(inner_event, "object_query", None)
+            if qq is None:
+                return ""
+            return str(qq.query)
+        except Exception:
+            return ""
+
+    @staticmethod
+    def _normalize(events: list[typing.Any]) -> list[typing.Any]:
+        if not events:
+            return []
+
+        out: list[typing.Any] = []
+        for ev in events:
+            which = ev.WhichOneof("event")
+            if not which:
+                continue
+            inner = getattr(ev, which)
+
+            if not out:
+                out.append(ev)
+                continue
+
+            last = out[-1]
+            last_which = last.WhichOneof("event")
+            last_inner = getattr(last, last_which)
+
+            last_q = CodeGenerator._get_query_key(last_inner)
+            cur_q = CodeGenerator._get_query_key(inner)
+
+            text_group = {"text_edit_text_changed", "line_edit_text_changed"}
+            if (
+                which in text_group
+                and which == last_which
+                and last_q
+                and last_q == cur_q
+            ):
+                setattr(last_inner, "value", inner.value)
+                continue
+
+            numeric_group = {
+                "combo_box_current_changed",
+                "spin_box_value_changed",
+                "double_spin_box_value_changed",
+                "slider_value_changed",
+                "tab_current_changed",
+                "tool_box_current_changed",
+            }
+            if (
+                which in numeric_group
+                and which == last_which
+                and last_q
+                and last_q == cur_q
+            ):
+                for fld in ("index", "value", "from", "to"):
+                    if hasattr(inner, fld):
+                        setattr(last_inner, fld, getattr(inner, fld))
+                continue
+
+            out.append(ev)
+
+        return out
+
+    @staticmethod
+    def _wrap(action: str, code: str, width: int = 80) -> str:
+        text = f" {action} "
+        header = text.center(width, "#")
+        footer = "#" * width
+        return f"{header}\n{code}{footer}\n\n"
+
+    def _context_menu_opened(self, event: typing.Any) -> str:
+        q = event.object_query.query.replace("'", "\\'")
+        code = f"obj = m.waitForObject('{q}')\n"  # TODO: Implement
+        return self._wrap(code)
+
+    def _button_clicked(self, event: typing.Any) -> str:
+        q = event.object_query.query.replace("'", "\\'")
+        code = f"obj = m.waitForObject('{q}')\n" f"obj.click()\n"
+        return self._wrap(code)
+
+    def _button_toggled(self, event: typing.Any) -> str:
+        q = event.object_query.query.replace("'", "\\'")
+        checked = bool(event.checked)
+        code = f"obj = m.waitForObject('{q}')\n" f"obj.setChecked({checked})\n"
+        return self._wrap(code)
+
+    def _combo_box_current_changed(self, event: typing.Any) -> str:
+        q = event.object_query.query.replace("'", "\\'")
+        idx = int(event.index)
+        code = f"obj = m.waitForObject('{q}')\n" f"obj.setCurrentIndex({idx})\n"
+        return self._wrap(code)
+
+    def _spin_box_value_changed(self, event: typing.Any) -> str:
+        q = event.object_query.query.replace("'", "\\'")
+        v = int(event.value)
+        code = f"obj = m.waitForObject('{q}')\n" f"obj.setValue({v})\n"
+        return self._wrap(code)
+
+    def _double_spin_box_value_changed(self, event: typing.Any) -> str:
+        q = event.object_query.query.replace("'", "\\'")
+        v = float(event.value)
+        code = f"obj = m.waitForObject('{q}')\n" f"obj.setValue({v})\n"
+        return self._wrap(code)
+
+    def _slider_value_changed(self, event: typing.Any) -> str:
+        q = event.object_query.query.replace("'", "\\'")
+        v = int(event.value)
+        code = f"obj = m.waitForObject('{q}')\n" f"obj.setValue({v})\n"
+        return self._wrap(code)
+
+    def _tab_current_changed(self, event: typing.Any) -> str:
+        q = event.object_query.query.replace("'", "\\'")
+        idx = int(event.index)
+        code = f"obj = m.waitForObject('{q}')\n" f"obj.setCurrentIndex({idx})\n"
+        return self._wrap(code)
+
+    def _tab_closed(self, event: typing.Any) -> str:
+        q = event.object_query.query.replace("'", "\\'")
+        idx = int(event.index)
+        code = f"obj = m.waitForObject('{q}')\n"  # TODO: Implement
+        return self._wrap(code)
+
+    def _tab_moved(self, event: typing.Any) -> str:
+        q = event.object_query.query.replace("'", "\\'")
+        frm = int(getattr(event, "from"))
+        to = int(event.to)
+        code = f"obj = m.waitForObject('{q}')\n"  # TODO: Implement
+        return self._wrap(code)
+
+    def _tool_box_current_changed(self, event: typing.Any) -> str:
+        q = event.object_query.query.replace("'", "\\'")
+        idx = int(event.index)
+        code = f"obj = m.waitForObject('{q}')\n" f"obj.setCurrentIndex({idx})\n"
+        return self._wrap(code)
+
+    def _action_triggered(self, event: typing.Any) -> str:
+        q = event.object_query.query.replace("'", "\\'")
+        code = f"obj = m.waitForObject('{q}')\n" f"obj.trigger()\n"
+        return self._wrap(code)
+
+    def _text_edit_text_changed(self, event: typing.Any) -> str:
+        q = event.object_query.query.replace("'", "\\'")
+        value = event.value.replace("'", "\\'")
+        code = f"obj = m.waitForObject('{q}')\n" f"obj.setText({value})"
+        return self._wrap(code)
+
+    def _line_edit_text_changed(self, event: typing.Any) -> str:
+        q = event.object_query.query.replace("'", "\\'")
+        value = event.value.replace("'", "\\'")
+        code = f"obj = m.waitForObject('{q}')\n" f"obj.setText({value})"
+        return self._wrap(code)
+
+    def _line_edit_return_pressed(self, event: typing.Any) -> str:
+        q = event.object_query.query.replace("'", "\\'")
+        code = f"obj = m.waitForObject('{q}')\n"  # TODO: Implement
+        return self._wrap(code)
+
     def generate(self, events: list[typing.Any]) -> str:
-        return ""
+        script_text = ""
+        normalized = self._normalize(events)
+
+        for event in normalized:
+            which = event.WhichOneof("event")
+            assert which, "event must have an inner oneof set"
+            handler = self._event_mapping.get(which)
+            if not handler:
+                script_text += f"# Skipping unsupported event: {which}\n"
+                continue
+            inner = getattr(event, which)
+            try:
+                script_text += f"{handler(inner)}\n"
+            except Exception as exc:
+                script_text += f"# Error generating code for event {which}: {exc}\n"
+
+        return script_text
