@@ -1,8 +1,10 @@
 import typing
+import re
 
 
 class CodeGenerator:
     def __init__(self):
+        self._object_vars: dict[str, str] = {}
         self._event_mapping = {
             "context_menu_opened": self._context_menu_opened,
             "button_clicked": self._button_clicked,
@@ -94,91 +96,110 @@ class CodeGenerator:
         footer = "#" * width
         return f"{header}\n{code}{footer}\n\n"
 
-    def _context_menu_opened(self, event: typing.Any) -> str:
+    def _get_or_declare_object(self, event: typing.Any) -> tuple[str, str]:
         q = event.object_query.query.replace("'", "\\'")
-        code = f"obj = m.waitForObject('{q}')\n"  # TODO: Implement
+        obj_id = getattr(event, "object_id", None)
+        key = str(obj_id.id) if obj_id and getattr(obj_id, "id", None) else q
+
+        if key in self._object_vars:
+            return self._object_vars[key], ""
+
+        name = f"obj_{getattr(obj_id, "id", None)}"
+        candidate = name
+        suffix = 1
+        while candidate in self._object_vars.values():
+            candidate = f"{name}_{suffix}"
+            suffix += 1
+
+        self._object_vars[key] = candidate
+        code_prefix = f"{candidate} = m.waitForObject('{q}')\n"
+        return candidate, code_prefix
+
+    def _context_menu_opened(self, event: typing.Any) -> str:
+        var_name, prefix = self._get_or_declare_object(event)
+        code = f"{prefix}"  # TODO: Implement
         return self._wrap("context menu opened", code)
 
     def _button_clicked(self, event: typing.Any) -> str:
-        q = event.object_query.query.replace("'", "\\'")
-        code = f"obj = m.waitForObject('{q}')\n" f"obj.click()\n"
+        var_name, prefix = self._get_or_declare_object(event)
+        code = f"{prefix}" f"{var_name}.click()\n"
         return self._wrap("button clicked", code)
 
     def _button_toggled(self, event: typing.Any) -> str:
-        q = event.object_query.query.replace("'", "\\'")
+        var_name, prefix = self._get_or_declare_object(event)
         checked = bool(event.checked)
-        code = f"obj = m.waitForObject('{q}')\n" f"obj.setChecked({checked})\n"
+        code = f"{prefix}" f"{var_name}.setChecked({checked})\n"
         return self._wrap("button toggled", code)
 
     def _combo_box_current_changed(self, event: typing.Any) -> str:
-        q = event.object_query.query.replace("'", "\\'")
+        var_name, prefix = self._get_or_declare_object(event)
         idx = int(event.index)
-        code = f"obj = m.waitForObject('{q}')\n" f"obj.setCurrentIndex({idx})\n"
+        code = f"{prefix}" f"{var_name}.setCurrentIndex({idx})\n"
         return self._wrap("combobox current changed", code)
 
     def _spin_box_value_changed(self, event: typing.Any) -> str:
-        q = event.object_query.query.replace("'", "\\'")
+        var_name, prefix = self._get_or_declare_object(event)
         v = int(event.value)
-        code = f"obj = m.waitForObject('{q}')\n" f"obj.setValue({v})\n"
+        code = f"{prefix}" f"{var_name}.setValue({v})\n"
         return self._wrap("spinbox value changed", code)
 
     def _double_spin_box_value_changed(self, event: typing.Any) -> str:
-        q = event.object_query.query.replace("'", "\\'")
+        var_name, prefix = self._get_or_declare_object(event)
         v = float(event.value)
-        code = f"obj = m.waitForObject('{q}')\n" f"obj.setValue({v})\n"
+        code = f"{prefix}" f"{var_name}.setValue({v})\n"
         return self._wrap("doublespinbox value changed", code)
 
     def _slider_value_changed(self, event: typing.Any) -> str:
-        q = event.object_query.query.replace("'", "\\'")
+        var_name, prefix = self._get_or_declare_object(event)
         v = int(event.value)
-        code = f"obj = m.waitForObject('{q}')\n" f"obj.setValue({v})\n"
+        code = f"{prefix}" f"{var_name}.setValue({v})\n"
         return self._wrap("slider value changed", code)
 
     def _tab_current_changed(self, event: typing.Any) -> str:
-        q = event.object_query.query.replace("'", "\\'")
+        var_name, prefix = self._get_or_declare_object(event)
         idx = int(event.index)
-        code = f"obj = m.waitForObject('{q}')\n" f"obj.setCurrentIndex({idx})\n"
+        code = f"{prefix}" f"{var_name}.setCurrentIndex({idx})\n"
         return self._wrap("tab current changed", code)
 
     def _tab_closed(self, event: typing.Any) -> str:
-        q = event.object_query.query.replace("'", "\\'")
+        var_name, prefix = self._get_or_declare_object(event)
         idx = int(event.index)
-        code = f"obj = m.waitForObject('{q}')\n"  # TODO: Implement
+        code = f"{prefix}"  # TODO: Implement
         return self._wrap("tab closed", code)
 
     def _tab_moved(self, event: typing.Any) -> str:
-        q = event.object_query.query.replace("'", "\\'")
+        var_name, prefix = self._get_or_declare_object(event)
         frm = int(getattr(event, "from"))
         to = int(event.to)
-        code = f"obj = m.waitForObject('{q}')\n"  # TODO: Implement
+        code = f"{prefix}"  # TODO: Implement
         return self._wrap("tab moved", code)
 
     def _tool_box_current_changed(self, event: typing.Any) -> str:
-        q = event.object_query.query.replace("'", "\\'")
+        var_name, prefix = self._get_or_declare_object(event)
         idx = int(event.index)
-        code = f"obj = m.waitForObject('{q}')\n" f"obj.setCurrentIndex({idx})\n"
+        code = f"{prefix}" f"{var_name}.setCurrentIndex({idx})\n"
         return self._wrap("toolbox current changed", code)
 
     def _action_triggered(self, event: typing.Any) -> str:
-        q = event.object_query.query.replace("'", "\\'")
-        code = f"obj = m.waitForObject('{q}')\n" f"obj.trigger()\n"
+        var_name, prefix = self._get_or_declare_object(event)
+        code = f"{prefix}" f"{var_name}.trigger()\n"
         return self._wrap("action triggered", code)
 
     def _text_edit_text_changed(self, event: typing.Any) -> str:
-        q = event.object_query.query.replace("'", "\\'")
+        var_name, prefix = self._get_or_declare_object(event)
         value = event.value.replace("'", "\\'")
-        code = f"obj = m.waitForObject('{q}')\n" f"obj.setText('{value}')\n"
+        code = f"{prefix}" f"{var_name}.setText('{value}')\n"
         return self._wrap("textedit text changed", code)
 
     def _line_edit_text_changed(self, event: typing.Any) -> str:
-        q = event.object_query.query.replace("'", "\\'")
+        var_name, prefix = self._get_or_declare_object(event)
         value = event.value.replace("'", "\\'")
-        code = f"obj = m.waitForObject('{q}')\n" f"obj.setText('{value}')\n"
+        code = f"{prefix}" f"{var_name}.setText('{value}')\n"
         return self._wrap("lineedit text changed", code)
 
     def _line_edit_return_pressed(self, event: typing.Any) -> str:
-        q = event.object_query.query.replace("'", "\\'")
-        code = f"obj = m.waitForObject('{q}')\n"  # TODO: Implement
+        var_name, prefix = self._get_or_declare_object(event)
+        code = f"{prefix}"  # TODO: Implement
         return self._wrap("lineedit return pressed", code)
 
     def generate(self, events: list[typing.Any]) -> str:
