@@ -115,9 +115,9 @@ class CodeGenerator:
         code_prefix = f"{candidate} = m.waitForObject('{q}')\n"
         return candidate, code_prefix
 
-    def _context_menu_opened(self, event: typing.Any) -> str:
+    def _context_menu_opened(self, event: typing.Any) -> str:  # TODO: Implement
         var_name, prefix = self._get_or_declare_object(event)
-        code = f"{prefix}"  # TODO: Implement
+        code = f"{prefix}"
         return self._wrap("context menu opened", code)
 
     def _button_clicked(self, event: typing.Any) -> str:
@@ -161,17 +161,17 @@ class CodeGenerator:
         code = f"{prefix}" f"{var_name}.setCurrentIndex({idx})\n"
         return self._wrap("tab current changed", code)
 
-    def _tab_closed(self, event: typing.Any) -> str:
+    def _tab_closed(self, event: typing.Any) -> str:  # TODO: Implement
         var_name, prefix = self._get_or_declare_object(event)
         idx = int(event.index)
-        code = f"{prefix}"  # TODO: Implement
+        code = f"{prefix}"
         return self._wrap("tab closed", code)
 
-    def _tab_moved(self, event: typing.Any) -> str:
+    def _tab_moved(self, event: typing.Any) -> str:  # TODO: Implement
         var_name, prefix = self._get_or_declare_object(event)
         frm = int(getattr(event, "from"))
         to = int(event.to)
-        code = f"{prefix}"  # TODO: Implement
+        code = f"{prefix}"
         return self._wrap("tab moved", code)
 
     def _tool_box_current_changed(self, event: typing.Any) -> str:
@@ -197,9 +197,9 @@ class CodeGenerator:
         code = f"{prefix}" f"{var_name}.setText('{value}')\n"
         return self._wrap("lineedit text changed", code)
 
-    def _line_edit_return_pressed(self, event: typing.Any) -> str:
+    def _line_edit_return_pressed(self, event: typing.Any) -> str:  # TODO: Implement
         var_name, prefix = self._get_or_declare_object(event)
-        code = f"{prefix}"  # TODO: Implement
+        code = f"{prefix}"
         return self._wrap("lineedit return pressed", code)
 
     def generate(self, events: list[typing.Any]) -> str:
