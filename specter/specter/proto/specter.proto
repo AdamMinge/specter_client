@@ -261,74 +261,89 @@ message ObjectTextInput {
 
 message ContextMenuOpened {
   ObjectSearchQuery object_query = 1;
+  ObjectId object_id  = 2;
 }
 
 message ButtonClicked {
   ObjectSearchQuery object_query = 1;
+  ObjectId object_id  = 2;
 }
 
 message ButtonToggled {
   ObjectSearchQuery object_query = 1;
-  bool checked = 2;
+  ObjectId object_id  = 2;
+  bool checked = 3;
 }
 
 message ComboBoxCurrentChanged {
   ObjectSearchQuery object_query = 1;
-  int32 index = 2;
+  ObjectId object_id  = 2;
+  int32 index = 3;
 }
 
 message SpinBoxValueChanged {
   ObjectSearchQuery object_query = 1;
-  int32 value = 2;
+  ObjectId object_id  = 2;
+  int32 value = 3;
 }
 
 message DoubleSpinBoxValueChanged {
   ObjectSearchQuery object_query = 1;
-  double value = 2;
+  ObjectId object_id  = 2;
+  double value = 3;
 }
 
 message SliderValueChanged {
   ObjectSearchQuery object_query = 1;
-  int32 value = 2;
+  ObjectId object_id  = 2;
+  int32 value = 3;
 }
 
 message TabCurrentChanged {
   ObjectSearchQuery object_query = 1;
-  int32 index = 2;
+  ObjectId object_id  = 2;
+  int32 index = 3;
 }
 
 message TabClosed {
   ObjectSearchQuery object_query = 1;
-  int32 index = 2;
+  ObjectId object_id  = 2;
+  int32 index = 3;
 }
 
 message TabMoved {
   ObjectSearchQuery object_query = 1;
-  int32 from = 2;
-  int32 to = 3;
+  ObjectId object_id  = 2;
+  int32 from = 3;
+  int32 to = 4;
 }
 
 message ToolBoxCurrentChanged {
   ObjectSearchQuery object_query = 1;
-  int32 index = 2;
+  ObjectId object_id  = 2;
+  int32 index = 3;
 }
 
 message ActionTriggered {
   ObjectSearchQuery object_query = 1;
+  ObjectId object_id  = 2;
 }
 
 message TextEditTextChanged {
   ObjectSearchQuery object_query = 1;
-  string value = 2;
+  ObjectId object_id  = 2;
+  string value = 3;
 }
 
 message LineEditTextChanged {
   ObjectSearchQuery object_query = 1;
-  string value = 2;
+  ObjectId object_id  = 2;
+  string value = 3;
 }
 
 message LineEditReturnPressed {
   ObjectSearchQuery object_query = 1;
+  ObjectId object_id  = 2;
 }
 
 message RecorderCommand {
