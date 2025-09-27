@@ -26,13 +26,13 @@ class ObjectWrapper:
 
     def _get_methods(self):
         if self._methods_cache is None:
-            response = self.client.object_stub.GetMethods(ObjectId(id=self._object_id))
+            response = self._client.object_stub.GetMethods(ObjectId(id=self._object_id))
             self._methods_cache = {m.method_name: m for m in response.methods}
         return self._methods_cache
 
     def _get_properties(self):
         if self._properties_cache is None:
-            response = self.client.object_stub.GetProperties(
+            response = self._client.object_stub.GetProperties(
                 ObjectId(id=self._object_id)
             )
             self._properties_cache = {p.property_name: p for p in response.properties}
@@ -51,7 +51,7 @@ class ObjectWrapper:
             method_name=method_name,
             arguments=pb_args,
         )
-        self.client.object_stub.CallMethod(method_call_pb)
+        self._client.object_stub.CallMethod(method_call_pb)
 
     def _get_remote_property(self, property_name: str):
         properties = self._get_properties()
@@ -89,20 +89,22 @@ class ObjectWrapper:
             value=pb_value,
         )
 
-        self.client.object_stub.UpdateProperty(property_update_pb)
+        self._client.object_stub.UpdateProperty(property_update_pb)
         self._properties_cache = None
 
     def getChildren(self):
-        response = self.client.object_stub.GetChildren(ObjectId(id=self._object_id))
+        response = self._client.object_stub.GetChildren(ObjectId(id=self._object_id))
         children = []
         for obj_pb in response.ids:
-            children.append(ObjectWrapper.create_wrapper_object(self._stub, obj_pb.id))
+            children.append(
+                ObjectWrapper.create_wrapper_object(self._client, obj_pb.id)
+            )
         return children
 
     def getParent(self):
-        parent_pb = self.client.object_stub.GetParent(ObjectId(id=self._object_id))
+        parent_pb = self._client.object_stub.GetParent(ObjectId(id=self._object_id))
         if parent_pb and parent_pb.id:
-            return ObjectWrapper.create_wrapper_object(self._stub, parent_pb.id)
+            return ObjectWrapper.create_wrapper_object(self._client, parent_pb.id)
         return None
 
     def __getattr__(self, name: str):
