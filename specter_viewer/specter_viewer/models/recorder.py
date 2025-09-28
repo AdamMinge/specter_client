@@ -35,9 +35,13 @@ EVENT_FORMATTERS = {
     "tab_moved": lambda ev: f"TabMoved {ev.object_query.query} from={ev.from_} to={ev.to}",
     "tool_box_current_changed": lambda ev: f"ToolBoxCurrentChanged {ev.object_query.query} index={ev.index}",
     "action_triggered": lambda ev: f"ActionTriggered {ev.object_query.query}",
+    "action_hovered": lambda ev: f"ActionHovered {ev.object_query.query}",
     "text_edit_text_changed": lambda ev: f"TextEditTextChanged {ev.object_query.query} value={ev.value}",
     "line_edit_text_changed": lambda ev: f"LineEditTextChanged {ev.object_query.query} value={ev.value}",
     "line_edit_return_pressed": lambda ev: f"LineEditReturnPressed {ev.object_query.query}",
+    "window minimized": lambda ev: f"WindowMinimized {ev.object_query.query}",
+    "window maximized": lambda ev: f"WindowMaximized {ev.object_query.query}",
+    "window closed": lambda ev: f"WindowClosed {ev.object_query.query}",
 }
 
 

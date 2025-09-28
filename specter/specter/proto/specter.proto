@@ -329,6 +329,11 @@ message ActionTriggered {
   ObjectId object_id  = 2;
 }
 
+message ActionHovered {
+  ObjectSearchQuery object_query = 1;
+  ObjectId object_id  = 2;
+}
+
 message TextEditTextChanged {
   ObjectSearchQuery object_query = 1;
   ObjectId object_id  = 2;
@@ -342,6 +347,21 @@ message LineEditTextChanged {
 }
 
 message LineEditReturnPressed {
+  ObjectSearchQuery object_query = 1;
+  ObjectId object_id  = 2;
+}
+
+message WindowMinimized {
+  ObjectSearchQuery object_query = 1;
+  ObjectId object_id  = 2;
+}
+
+message WindowMaximized {
+  ObjectSearchQuery object_query = 1;
+  ObjectId object_id  = 2;
+}
+
+message WindowClosed {
   ObjectSearchQuery object_query = 1;
   ObjectId object_id  = 2;
 }
@@ -360,8 +380,12 @@ message RecorderCommand {
     TabMoved tab_moved = 10;
     ToolBoxCurrentChanged tool_box_current_changed = 11;
     ActionTriggered action_triggered = 12;
-    TextEditTextChanged text_edit_text_changed = 13;
-    LineEditTextChanged line_edit_text_changed = 14;
-    LineEditReturnPressed line_edit_return_pressed = 15;
+    ActionHovered action_hovered = 13;
+    TextEditTextChanged text_edit_text_changed = 14;
+    LineEditTextChanged line_edit_text_changed = 15;
+    LineEditReturnPressed line_edit_return_pressed = 16;
+    WindowMinimized window_minimized = 17;
+    WindowMaximized window_maximized = 18;
+    WindowClosed window_closed = 19;
   }
 }
