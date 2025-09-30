@@ -39,9 +39,9 @@ EVENT_FORMATTERS = {
     "text_edit_text_changed": lambda ev: f"TextEditTextChanged {ev.object_query.query} value={ev.value}",
     "line_edit_text_changed": lambda ev: f"LineEditTextChanged {ev.object_query.query} value={ev.value}",
     "line_edit_return_pressed": lambda ev: f"LineEditReturnPressed {ev.object_query.query}",
-    "window minimized": lambda ev: f"WindowMinimized {ev.object_query.query}",
-    "window maximized": lambda ev: f"WindowMaximized {ev.object_query.query}",
-    "window closed": lambda ev: f"WindowClosed {ev.object_query.query}",
+    "window_minimized": lambda ev: f"WindowMinimized {ev.object_query.query}",
+    "window_maximized": lambda ev: f"WindowMaximized {ev.object_query.query}",
+    "window_closed": lambda ev: f"WindowClosed {ev.object_query.query}",
 }
 
 
